@@ -164,40 +164,52 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-crema">
       {/* Header Admin */}
-      <header className="bg-cafe-oscuro text-crema px-4 py-4 flex items-center justify-between shadow-lg">
-        <div>
-          <h1 className="font-playfair text-lg font-bold tracking-wide">Panel de Administración</h1>
-          <p className="font-lato text-xs text-verde-pistache">FLOR DE SIL</p>
+      <header className="bg-gradient-to-r from-cafe-oscuro to-verde-marino text-crema px-6 py-4
+                         flex items-center justify-between shadow-lg sticky top-0 z-40">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="FLOR DE SIL"
+            className="w-10 h-9 object-cover rounded-[50%] border-2 border-cafe-claro/50"
+            style={{ objectPosition: 'center 25%' }} />
+          <div>
+            <h1 className="font-playfair text-base font-bold tracking-wide">Panel de Administración</h1>
+            <p className="font-lato text-xs text-verde-pistache">FLOR DE SIL</p>
+          </div>
         </div>
         <button
           onClick={handleLogout}
-          className="font-lato text-sm border border-crema/40 hover:border-crema text-crema
-                     px-4 py-2 rounded-lg transition-colors duration-200"
+          className="font-lato text-sm border border-crema/30 hover:border-crema/70
+                     hover:bg-white/10 text-crema px-4 py-2 rounded-xl
+                     transition-all duration-200 flex items-center gap-2"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
           Cerrar sesión
         </button>
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 border-b border-crema-oscura pb-1">
+        <div className="flex gap-3 mb-8">
           <button
             onClick={() => { setTab('catalogo'); setEditandoId(null); setForm(FORM_INICIAL); setPreview(null) }}
-            className={`font-lato font-bold text-sm px-5 py-2.5 rounded-t-lg transition-colors duration-200
+            className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
               ${tab === 'catalogo'
-                ? 'bg-cafe-oscuro text-crema'
-                : 'text-cafe-oscuro hover:bg-crema-oscura'}`}
+                ? 'bg-cafe-oscuro text-crema shadow-lg'
+                : 'text-cafe-oscuro bg-white border border-crema-oscura hover:bg-crema-oscura'}`}
           >
             Catálogo
           </button>
           <button
             onClick={() => { setTab('form'); setEditandoId(null); setForm(FORM_INICIAL); setPreview(null); setFormError(null); setFormExito(null) }}
-            className={`font-lato font-bold text-sm px-5 py-2.5 rounded-t-lg transition-colors duration-200
+            className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
+              flex items-center gap-2
               ${tab === 'form'
-                ? 'bg-cafe-oscuro text-crema'
-                : 'text-cafe-oscuro hover:bg-crema-oscura'}`}
+                ? 'bg-cafe-oscuro text-crema shadow-lg'
+                : 'text-cafe-oscuro bg-white border border-crema-oscura hover:bg-crema-oscura'}`}
           >
-            + Agregar Ramo
+            <span className="text-lg leading-none">+</span> Agregar Ramo
           </button>
         </div>
 

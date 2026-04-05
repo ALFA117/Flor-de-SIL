@@ -8,10 +8,83 @@
     background-color: #F5ECD7;
     color: #3B1F0E;
   }
+
+  * {
+    scroll-behavior: smooth;
+  }
 }
 
+/* ── Animaciones ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes floatLogo {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* ── Clases utilitarias de animación ── */
 @layer utilities {
-  .font-playfair {
-    font-family: 'Playfair Display', serif;
+  .animate-fade-in        { animation: fadeIn    0.7s ease both; }
+  .animate-fade-in-up     { animation: fadeInUp  0.8s ease both; }
+  .animate-fade-in-down   { animation: fadeInDown 0.6s ease both; }
+  .animate-scale-in       { animation: scaleIn   0.7s cubic-bezier(.22,1,.36,1) both; }
+  .animate-float          { animation: floatLogo 4s ease-in-out infinite; }
+  .animate-pulse-soft     { animation: pulse-soft 2.5s ease-in-out infinite; }
+
+  .delay-100  { animation-delay: 0.1s; }
+  .delay-200  { animation-delay: 0.2s; }
+  .delay-300  { animation-delay: 0.3s; }
+  .delay-400  { animation-delay: 0.4s; }
+  .delay-500  { animation-delay: 0.5s; }
+  .delay-600  { animation-delay: 0.6s; }
+  .delay-700  { animation-delay: 0.7s; }
+  .delay-800  { animation-delay: 0.8s; }
+
+  /* Shimmer dorado para separadores */
+  .shimmer-gold {
+    background: linear-gradient(90deg, #C4956A 0%, #f0d080 50%, #C4956A 100%);
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* Glassmorphism suave */
+  .glass {
+    background: rgba(245, 236, 215, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(245, 236, 215, 0.25);
   }
 }
