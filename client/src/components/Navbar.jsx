@@ -25,10 +25,9 @@ export default function Navbar() {
           <img
             src="/logo.png"
             alt="FLOR DE SIL"
-            className="w-12 h-10 object-cover rounded-[50%] border-2 border-cafe-claro/60
+            className="w-11 h-11 object-cover rounded-full border-2 border-cafe-claro/60
                        group-hover:border-cafe-claro group-hover:scale-105
                        transition-all duration-300 shadow-lg"
-            style={{ objectPosition: 'center 30%' }}
           />
           <div className="flex flex-col leading-tight">
             <span className="font-playfair font-bold text-lg tracking-widest text-crema">

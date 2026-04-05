@@ -26,8 +26,7 @@ export default function RamoCard({ ramo, onClick }) {
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-crema to-crema-oscura flex items-center justify-center">
             <img src="/logo.png" alt="FLOR DE SIL"
-              className="w-24 h-20 object-cover rounded-[50%] opacity-30"
-              style={{ objectPosition: 'center 25%' }} />
+              className="w-24 h-24 object-cover rounded-full opacity-30" />
           </div>
         )}
 

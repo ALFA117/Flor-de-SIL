@@ -68,10 +68,9 @@ export default function Login() {
                 <img
                   src="/logo.png"
                   alt="FLOR DE SIL"
-                  className="w-28 h-24 object-cover rounded-[50%]
+                  className="w-28 h-28 object-cover rounded-full
                              border-4 border-cafe-claro/60
                              shadow-[0_0_40px_rgba(196,149,106,0.4)]"
-                  style={{ objectPosition: 'center 25%' }}
                 />
               </div>
             </div>

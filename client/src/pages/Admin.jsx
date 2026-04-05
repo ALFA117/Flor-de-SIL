@@ -168,8 +168,7 @@ export default function Admin() {
                          flex items-center justify-between shadow-lg sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="FLOR DE SIL"
-            className="w-10 h-9 object-cover rounded-[50%] border-2 border-cafe-claro/50"
-            style={{ objectPosition: 'center 25%' }} />
+            className="w-10 h-10 object-cover rounded-full border-2 border-cafe-claro/50" />
           <div>
             <h1 className="font-playfair text-base font-bold tracking-wide">Panel de Administración</h1>
             <p className="font-lato text-xs text-verde-pistache">FLOR DE SIL</p>

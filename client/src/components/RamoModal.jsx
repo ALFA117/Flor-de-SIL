@@ -37,8 +37,7 @@ export default function RamoModal({ ramo, onClose }) {
           <div className="aspect-[4/3] rounded-t-3xl bg-gradient-to-br from-crema to-crema-oscura
                           flex items-center justify-center">
             <img src="/logo.png" alt="FLOR DE SIL"
-              className="w-32 h-28 object-cover rounded-[50%] opacity-40"
-              style={{ objectPosition: 'center 25%' }} />
+              className="w-32 h-32 object-cover rounded-full opacity-40" />
           </div>
         )}
 

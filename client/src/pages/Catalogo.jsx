@@ -69,9 +69,8 @@ export default function Catalogo() {
               <img
                 src="/logo.png"
                 alt="FLOR DE SIL"
-                className="w-52 h-44 object-cover rounded-[50%] shadow-[0_0_60px_rgba(196,149,106,0.4)]
+                className="w-52 h-52 object-cover rounded-full shadow-[0_0_60px_rgba(196,149,106,0.4)]
                            border-4 border-cafe-claro/70"
-                style={{ objectPosition: 'center 25%' }}
               />
             </div>
           </div>
@@ -147,8 +146,7 @@ export default function Catalogo() {
           {!loading && !error && ramos.length === 0 && (
             <div className="text-center py-20 max-w-md mx-auto animate-fade-in-up">
               <img src="/logo.png" alt="FLOR DE SIL"
-                className="w-32 h-28 object-cover rounded-[50%] mx-auto mb-6 opacity-40"
-                style={{ objectPosition: 'center 25%' }} />
+                className="w-32 h-32 object-cover rounded-full mx-auto mb-6 opacity-40" />
               <p className="font-playfair text-xl text-cafe-oscuro mb-2">
                 Por el momento no contamos con disponibilidad.
               </p>
@@ -194,8 +192,7 @@ export default function Catalogo() {
       <footer className="bg-cafe-oscuro text-crema py-14 px-4">
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
           <img src="/logo.png" alt="FLOR DE SIL"
-            className="w-20 h-16 object-cover rounded-[50%] mb-5 border-2 border-cafe-claro/40 opacity-90"
-            style={{ objectPosition: 'center 25%' }} />
+            className="w-20 h-20 object-cover rounded-full mb-5 border-2 border-cafe-claro/40 opacity-90" />
 
           <p className="font-playfair text-xl font-semibold mb-1">FLOR DE SIL</p>
           <p className="font-playfair italic text-verde-pistache text-sm mb-6">
