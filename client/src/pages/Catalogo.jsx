@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import api from '../api/axios'
+import supabase from '../lib/supabase'
 import RamoCard from '../components/RamoCard'
 import RamoModal from '../components/RamoModal'
 import Spinner from '../components/Spinner'
@@ -15,8 +15,15 @@ export default function Catalogo() {
   const catalogoRef = useRef(null)
 
   useEffect(() => {
-    api.get('/api/ramos?soloDisponibles=true')
-      .then(({ data }) => setRamos(data.ramos || []))
+    supabase
+      .from('ramos')
+      .select('*')
+      .eq('disponible', true)
+      .order('creado_en', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) throw error
+        setRamos(data || [])
+      })
       .catch(() => setError('No pudimos cargar el catálogo. Intenta más tarde.'))
       .finally(() => setLoading(false))
   }, [])
