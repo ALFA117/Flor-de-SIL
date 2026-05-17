@@ -16,7 +16,7 @@ export default function Catalogo() {
 
   // Cargar ramos + incrementar contador de visitas al montar
   useEffect(() => {
-    supabase.rpc('incrementar_visitas_pagina').catch(() => null)
+    supabase.rpc('incrementar_visitas_pagina').then(() => null, () => null)
 
     supabase
       .from('ramos')
