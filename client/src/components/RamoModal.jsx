@@ -7,6 +7,14 @@ export default function RamoModal({ ramo, onClose }) {
     `Hola, me interesa el ramo *${ramo.nombre}*, ¿está disponible?`
   )}`
 
+  const tienePromo = ramo.en_promocion && ramo.precio_promocion && ramo.precio
+  const ahorro = tienePromo
+    ? Number(ramo.precio) - Number(ramo.precio_promocion)
+    : 0
+  const pct = tienePromo
+    ? Math.round((ahorro / Number(ramo.precio)) * 100)
+    : 0
+
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handler)
@@ -32,8 +40,16 @@ export default function RamoModal({ ramo, onClose }) {
         {ramo.foto_url ? (
           <div className="aspect-[4/3] overflow-hidden rounded-t-3xl relative">
             <img src={ramo.foto_url} alt={ramo.nombre} className="w-full h-full object-cover" />
-            {ramo.en_promocion && (
-              <div className="absolute inset-0 bg-gradient-to-t from-amber-900/30 to-transparent" />
+            {tienePromo && (
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-900/20 to-transparent" />
+            )}
+            {/* Badge % ahorro sobre la foto */}
+            {tienePromo && (
+              <div className="absolute top-4 right-4 bg-red-500 text-white
+                              font-lato font-bold text-lg w-14 h-14 rounded-full
+                              flex items-center justify-center shadow-lg animate-bounce-in">
+                -{pct}%
+              </div>
             )}
           </div>
         ) : (
@@ -45,6 +61,7 @@ export default function RamoModal({ ramo, onClose }) {
         )}
 
         <div className="p-7">
+          {/* Badges */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex gap-2 flex-wrap">
               {ramo.en_promocion ? (
@@ -61,7 +78,8 @@ export default function RamoModal({ ramo, onClose }) {
             </div>
             <button
               onClick={onClose}
-              className="text-cafe-medio hover:text-cafe-oscuro transition-colors text-xl leading-none ml-2 flex-shrink-0"
+              className="text-cafe-medio hover:text-cafe-oscuro transition-colors text-xl leading-none ml-2 flex-shrink-0
+                         hover:rotate-90 transition-all duration-300"
             >
               ✕
             </button>
@@ -86,7 +104,8 @@ export default function RamoModal({ ramo, onClose }) {
                 {ramo.flores.map((flor, i) => (
                   <span key={i}
                     className="inline-flex items-center gap-1 bg-white border border-crema-oscura
-                               text-cafe-medio text-sm font-lato px-3 py-1.5 rounded-full shadow-sm">
+                               text-cafe-medio text-sm font-lato px-3 py-1.5 rounded-full shadow-sm
+                               hover:border-cafe-claro/50 transition-colors duration-200">
                     🌸 {flor}
                   </span>
                 ))}
@@ -94,20 +113,48 @@ export default function RamoModal({ ramo, onClose }) {
             </div>
           )}
 
+          {/* Precio */}
           {ramo.precio && (
-            <div className={`rounded-2xl p-4 mb-6 border
-              ${ramo.en_promocion
-                ? 'bg-amber-50 border-amber-200'
-                : 'bg-white border-crema-oscura'}`}>
-              <p className="font-lato text-xs uppercase tracking-widest mb-1
-                            text-cafe-medio">
-                {ramo.en_promocion ? '🏷️ Precio de oferta' : 'Precio'}
-              </p>
-              <p className={`font-playfair font-bold text-3xl
-                ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-claro'}`}>
-                ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                <span className="font-lato font-light text-sm text-cafe-medio ml-1">MXN</span>
-              </p>
+            <div className={`rounded-2xl p-5 mb-6 border
+              ${tienePromo ? 'bg-amber-50 border-amber-200' : 'bg-white border-crema-oscura'}`}>
+
+              {tienePromo ? (
+                <>
+                  <p className="font-lato text-xs uppercase tracking-widest mb-2 text-amber-600 font-bold">
+                    🏷️ Precio especial de oferta
+                  </p>
+                  {/* Precio original tachado */}
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="font-lato text-lg text-cafe-medio/50 line-through">
+                      ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                    </span>
+                    <span className="font-lato font-bold text-xs text-red-500 bg-red-50
+                                     border border-red-200 px-2 py-0.5 rounded-full">
+                      Antes
+                    </span>
+                  </div>
+                  {/* Precio promo */}
+                  <p className="font-playfair font-bold text-amber-600 text-4xl animate-price-drop">
+                    ${Number(ramo.precio_promocion).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    <span className="font-lato font-light text-base text-cafe-medio ml-2">MXN</span>
+                  </p>
+                  {/* Ahorro */}
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 bg-green-100 border border-green-300
+                                     text-green-700 font-lato font-bold text-sm px-3 py-1.5 rounded-full">
+                      ✓ Ahorras ${ahorro.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN ({pct}% off)
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="font-lato text-xs text-cafe-medio uppercase tracking-widest mb-1">Precio</p>
+                  <p className="font-playfair font-bold text-cafe-claro text-3xl">
+                    ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    <span className="font-lato font-light text-sm text-cafe-medio ml-1">MXN</span>
+                  </p>
+                </>
+              )}
             </div>
           )}
 

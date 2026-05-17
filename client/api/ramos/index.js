@@ -85,9 +85,12 @@ export default async function handler(req, res) {
         foto_url = urlData.publicUrl
       }
 
-      const enPromocionRaw = Array.isArray(fields.en_promocion) ? fields.en_promocion[0] : fields.en_promocion
-      const precioNum = precio ? parseFloat(precio) : null
-      const enPromocion = enPromocionRaw === 'true' || (precioNum !== null && precioNum >= 1500)
+      const enPromocionRaw    = Array.isArray(fields.en_promocion)    ? fields.en_promocion[0]    : fields.en_promocion
+      const precioPromocionRaw = Array.isArray(fields.precio_promocion) ? fields.precio_promocion[0] : fields.precio_promocion
+      const precioNum          = precio ? parseFloat(precio) : null
+      const enPromocion        = enPromocionRaw === 'true' || (precioNum !== null && precioNum >= 1500)
+      const precioPromocion    = precioPromocionRaw && precioPromocionRaw !== ''
+        ? parseFloat(precioPromocionRaw) : null
 
       const { data, error } = await supabase
         .from('ramos')
@@ -100,6 +103,7 @@ export default async function handler(req, res) {
           foto_path,
           disponible: disponible === 'true',
           en_promocion: enPromocion,
+          precio_promocion: precioPromocion,
         })
         .select()
         .single()

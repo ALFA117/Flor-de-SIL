@@ -56,12 +56,17 @@ export default async function handler(req, res) {
       const en_promocion  = Array.isArray(fields.en_promocion) ? fields.en_promocion[0] : fields.en_promocion
       const floresRaw     = Array.isArray(fields.flores)       ? fields.flores[0]       : fields.flores
 
-      if (nombre       !== undefined) updates.nombre      = nombre
-      if (descripcion  !== undefined) updates.descripcion = descripcion
-      if (floresRaw    !== undefined) updates.flores      = JSON.parse(floresRaw)
-      if (precio       !== undefined) updates.precio      = precio ? parseFloat(precio) : null
-      if (disponible   !== undefined) updates.disponible  = disponible === 'true'
-      if (en_promocion !== undefined) updates.en_promocion = en_promocion === 'true'
+      const precio_promocion = Array.isArray(fields.precio_promocion)
+        ? fields.precio_promocion[0] : fields.precio_promocion
+
+      if (nombre          !== undefined) updates.nombre          = nombre
+      if (descripcion     !== undefined) updates.descripcion     = descripcion
+      if (floresRaw       !== undefined) updates.flores          = JSON.parse(floresRaw)
+      if (precio          !== undefined) updates.precio          = precio ? parseFloat(precio) : null
+      if (disponible      !== undefined) updates.disponible      = disponible === 'true'
+      if (en_promocion    !== undefined) updates.en_promocion    = en_promocion === 'true'
+      if (precio_promocion !== undefined) updates.precio_promocion =
+        (precio_promocion && precio_promocion !== '') ? parseFloat(precio_promocion) : null
 
       const fotoFile = files.foto?.[0] || files.foto
       if (fotoFile) {

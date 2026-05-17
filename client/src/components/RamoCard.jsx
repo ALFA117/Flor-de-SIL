@@ -1,5 +1,44 @@
 const WA_NUMBER = '5215652539705'
 
+function PrecioDisplay({ ramo }) {
+  const tienePromo = ramo.en_promocion && ramo.precio_promocion
+
+  if (!ramo.precio) return null
+
+  if (tienePromo) {
+    const ahorro = Number(ramo.precio) - Number(ramo.precio_promocion)
+    return (
+      <div className="mb-3 animate-price-drop">
+        {/* Precio original tachado */}
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="font-lato text-sm text-cafe-medio/60 line-through">
+            ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          </span>
+          <span className="text-xs font-lato font-bold text-red-500 bg-red-50
+                           border border-red-200 px-1.5 py-0.5 rounded-full">
+            -{Math.round((ahorro / Number(ramo.precio)) * 100)}%
+          </span>
+        </div>
+        {/* Precio de promoción */}
+        <p className="font-playfair font-bold text-xl text-amber-600">
+          ${Number(ramo.precio_promocion).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          <span className="font-lato font-light text-sm text-cafe-medio ml-1">MXN</span>
+        </p>
+        <p className="text-xs font-lato text-green-600 font-semibold">
+          Ahorras ${ahorro.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <p className="font-playfair font-bold text-cafe-claro text-xl mb-3">
+      ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+      <span className="font-lato font-light text-sm text-cafe-medio ml-1">MXN</span>
+    </p>
+  )
+}
+
 export default function RamoCard({ ramo, onClick }) {
   const waLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
     `Hola, me interesa el ramo *${ramo.nombre}*, ¿está disponible?`
@@ -7,7 +46,7 @@ export default function RamoCard({ ramo, onClick }) {
 
   return (
     <article
-      className="group bg-white rounded-2xl overflow-hidden
+      className="card-shine group bg-white rounded-2xl overflow-hidden
                  shadow-[0_4px_24px_rgba(59,31,14,0.10)]
                  hover:shadow-[0_16px_48px_rgba(59,31,14,0.25)]
                  hover:-translate-y-3 transition-all duration-500 ease-out
@@ -31,10 +70,10 @@ export default function RamoCard({ ramo, onClick }) {
           </div>
         )}
 
-        {/* Overlay degradado en la foto */}
+        {/* Overlay degradado */}
         <div className="absolute inset-0 bg-gradient-to-t from-cafe-oscuro/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-        {/* Badge de estado: Promoción tiene prioridad */}
+        {/* Badge promo o disponible */}
         {ramo.en_promocion ? (
           <span className="absolute top-3 left-3 flex items-center gap-1
                            bg-gradient-to-r from-amber-500 to-yellow-400
@@ -49,7 +88,16 @@ export default function RamoCard({ ramo, onClick }) {
           </span>
         )}
 
-        {/* Ícono de lupa al hover */}
+        {/* Ahorro badge (solo si tiene precio promo) */}
+        {ramo.en_promocion && ramo.precio_promocion && ramo.precio && (
+          <span className="absolute top-3 right-3 bg-red-500 text-white
+                           text-xs font-lato font-bold px-2 py-1 rounded-full shadow-md
+                           animate-bounce-in">
+            -{Math.round(((Number(ramo.precio) - Number(ramo.precio_promocion)) / Number(ramo.precio)) * 100)}%
+          </span>
+        )}
+
+        {/* Ícono zoom al hover */}
         <div className="absolute inset-0 flex items-center justify-center
                         opacity-0 group-hover:opacity-100 transition-opacity duration-400">
           <div className="bg-white/20 backdrop-blur-sm rounded-full p-3
@@ -90,21 +138,7 @@ export default function RamoCard({ ramo, onClick }) {
         )}
 
         <div className="mt-auto pt-3 border-t border-crema-oscura/50">
-          {ramo.precio && (
-            <div className="flex items-center gap-2 mb-3">
-              <p className={`font-playfair font-bold text-xl
-                ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-claro'}`}>
-                ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                <span className="font-lato font-light text-sm text-cafe-medio ml-1">MXN</span>
-              </p>
-              {ramo.en_promocion && (
-                <span className="text-xs font-lato font-bold text-amber-600 bg-amber-50
-                                 border border-amber-200 px-2 py-0.5 rounded-full">
-                  Especial
-                </span>
-              )}
-            </div>
-          )}
+          <PrecioDisplay ramo={ramo} />
 
           <a
             href={waLink}

@@ -13,6 +13,7 @@ const FORM_INICIAL = {
   precio: '',
   disponible: true,
   en_promocion: false,
+  precio_promocion: '',
   foto: null,
 }
 
@@ -20,11 +21,12 @@ export default function Admin() {
   const { logout } = useAuth()
   const navigate = useNavigate()
 
-  const [tab, setTab] = useState('catalogo') // 'catalogo' | 'form' | 'promociones'
+  const [tab, setTab] = useState('catalogo')
   const [ramos, setRamos] = useState([])
   const [loadingRamos, setLoadingRamos] = useState(true)
   const [error, setError] = useState(null)
   const [visitas, setVisitas] = useState(null)
+  const [displayVisitas, setDisplayVisitas] = useState(0)
 
   const [form, setForm] = useState(FORM_INICIAL)
   const [editandoId, setEditandoId] = useState(null)
@@ -35,6 +37,11 @@ export default function Admin() {
 
   const [eliminandoId, setEliminandoId] = useState(null)
   const [confirmEliminar, setConfirmEliminar] = useState(null)
+
+  // Edición inline de precio_promocion en tab Promociones
+  const [precioPromoEdit, setPrecioPromoEdit] = useState({})
+  const [savingPromoId, setSavingPromoId] = useState(null)
+  const [promoExito, setPromoExito] = useState(null)
 
   const fileRef = useRef(null)
 
@@ -47,24 +54,49 @@ export default function Admin() {
   }
 
   const cargarVisitas = async () => {
-    const { data } = await supabase
-      .from('config')
-      .select('valor')
-      .eq('clave', 'visitas_pagina')
-      .single()
-    if (data) setVisitas(Number(data.valor))
+    try {
+      const { data } = await supabase
+        .from('config')
+        .select('valor')
+        .eq('clave', 'visitas_pagina')
+        .single()
+      if (data) setVisitas(Number(data.valor))
+    } catch {}
   }
+
+  // Animación count-up para el contador de visitas
+  useEffect(() => {
+    if (visitas === null) return
+    let start = 0
+    const end = visitas
+    if (end === 0) { setDisplayVisitas(0); return }
+    const duration = 900
+    const steps = 40
+    const increment = Math.ceil(end / steps)
+    const interval = setInterval(() => {
+      start += increment
+      if (start >= end) {
+        setDisplayVisitas(end)
+        clearInterval(interval)
+      } else {
+        setDisplayVisitas(start)
+      }
+    }, duration / steps)
+    return () => clearInterval(interval)
+  }, [visitas])
 
   useEffect(() => {
     cargarRamos()
     cargarVisitas()
   }, [])
 
-  // Auto-activar promoción si precio >= 1500
+  // Auto-activar promo y sugerir precio al detectar precio >= 1500
   useEffect(() => {
     const precio = parseFloat(form.precio)
-    if (!isNaN(precio) && precio >= 1500 && !form.en_promocion) {
-      setForm((f) => ({ ...f, en_promocion: true }))
+    if (!isNaN(precio) && precio >= 1500) {
+      if (!form.en_promocion) {
+        setForm((f) => ({ ...f, en_promocion: true }))
+      }
     }
   }, [form.precio])
 
@@ -101,6 +133,29 @@ export default function Admin() {
     }
   }
 
+  // ── Guardar precio_promocion inline ──
+  const savePromoPrice = async (ramo) => {
+    const rawValue = precioPromoEdit[ramo.id]
+    if (rawValue === undefined || rawValue === '') return
+    const nuevoPrecio = parseFloat(rawValue)
+    if (isNaN(nuevoPrecio) || nuevoPrecio <= 0) return
+
+    setSavingPromoId(ramo.id)
+    try {
+      await api.put(`/api/ramos/${ramo.id}`, { precio_promocion: String(nuevoPrecio) })
+      setRamos((prev) =>
+        prev.map((r) => r.id === ramo.id ? { ...r, precio_promocion: nuevoPrecio } : r)
+      )
+      setPrecioPromoEdit((prev) => { const n = { ...prev }; delete n[ramo.id]; return n })
+      setPromoExito(ramo.id)
+      setTimeout(() => setPromoExito(null), 2000)
+    } catch {
+      // silently ignore
+    } finally {
+      setSavingPromoId(null)
+    }
+  }
+
   // ── Editar ──
   const iniciarEdicion = (ramo) => {
     setEditandoId(ramo.id)
@@ -111,6 +166,7 @@ export default function Admin() {
       precio: ramo.precio || '',
       disponible: ramo.disponible,
       en_promocion: ramo.en_promocion || false,
+      precio_promocion: ramo.precio_promocion || '',
       foto: null,
     })
     setPreview(ramo.foto_url || null)
@@ -129,7 +185,6 @@ export default function Admin() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  // ── Foto preview ──
   const handleFoto = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -141,7 +196,6 @@ export default function Admin() {
     setPreview(URL.createObjectURL(file))
   }
 
-  // ── Guardar ──
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError(null)
@@ -150,6 +204,13 @@ export default function Admin() {
     if (!form.nombre.trim()) return setFormError('El nombre es requerido.')
     if (form.flores.length === 0) return setFormError('Agrega al menos una flor.')
     if (!editandoId && !form.foto) return setFormError('La foto es requerida.')
+    if (form.en_promocion && form.precio_promocion) {
+      const pp = parseFloat(form.precio_promocion)
+      const p  = parseFloat(form.precio)
+      if (!isNaN(pp) && !isNaN(p) && pp >= p) {
+        return setFormError('El precio de promoción debe ser menor al precio original.')
+      }
+    }
 
     setGuardando(true)
     try {
@@ -160,6 +221,7 @@ export default function Admin() {
       fd.append('precio', form.precio)
       fd.append('disponible', String(form.disponible))
       fd.append('en_promocion', String(form.en_promocion))
+      fd.append('precio_promocion', form.precio_promocion || '')
       if (form.foto) fd.append('foto', form.foto)
 
       if (editandoId) {
@@ -183,7 +245,6 @@ export default function Admin() {
     }
   }
 
-  // ── Eliminar ──
   const confirmarEliminar = async () => {
     if (!confirmEliminar) return
     setEliminandoId(confirmEliminar.id)
@@ -200,9 +261,15 @@ export default function Admin() {
 
   const ramosEnPromocion = ramos.filter((r) => r.en_promocion)
 
+  const precioOriginal = parseFloat(form.precio)
+  const precioPromo    = parseFloat(form.precio_promocion)
+  const ahorroForm     = !isNaN(precioOriginal) && !isNaN(precioPromo) && precioPromo < precioOriginal
+    ? precioOriginal - precioPromo
+    : null
+
   return (
     <div className="min-h-screen bg-crema">
-      {/* Header Admin */}
+      {/* Header */}
       <header className="bg-gradient-to-r from-cafe-oscuro to-verde-marino text-crema px-6 py-4
                          flex items-center justify-between shadow-lg sticky top-0 z-40">
         <div className="flex items-center gap-3">
@@ -229,7 +296,7 @@ export default function Admin() {
 
       <div className="max-w-5xl mx-auto px-4 py-8">
 
-        {/* ── Widget de visitas ── */}
+        {/* ── Widget visitas ── */}
         {visitas !== null && (
           <div className="mb-6 bg-gradient-to-r from-verde-marino to-cafe-oscuro
                           rounded-2xl p-5 flex items-center gap-5 shadow-lg animate-fade-in-down">
@@ -245,15 +312,15 @@ export default function Admin() {
               <p className="font-lato text-xs text-verde-pistache uppercase tracking-widest mb-0.5">
                 Visitas totales a la página
               </p>
-              <p className="font-playfair font-bold text-3xl text-crema animate-count-up">
-                {visitas.toLocaleString('es-MX')}
+              <p className="font-playfair font-bold text-3xl text-crema">
+                {displayVisitas.toLocaleString('es-MX')}
               </p>
             </div>
             <button
               onClick={cargarVisitas}
               title="Actualizar"
               className="ml-auto p-2 rounded-lg hover:bg-white/10 text-verde-pistache
-                         transition-colors duration-200"
+                         transition-colors duration-200 hover:rotate-180 transition-transform"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -263,13 +330,13 @@ export default function Admin() {
           </div>
         )}
 
-        {/* Tabs */}
+        {/* ── Tabs ── */}
         <div className="flex gap-3 mb-8 flex-wrap">
           <button
             onClick={() => { setTab('catalogo'); setEditandoId(null); setForm(FORM_INICIAL); setPreview(null) }}
             className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
               ${tab === 'catalogo'
-                ? 'bg-cafe-oscuro text-crema shadow-lg'
+                ? 'bg-cafe-oscuro text-crema shadow-lg scale-105'
                 : 'text-cafe-oscuro bg-white border border-crema-oscura hover:bg-crema-oscura'}`}
           >
             Catálogo
@@ -279,7 +346,7 @@ export default function Admin() {
             className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
               flex items-center gap-2
               ${tab === 'form'
-                ? 'bg-cafe-oscuro text-crema shadow-lg'
+                ? 'bg-cafe-oscuro text-crema shadow-lg scale-105'
                 : 'text-cafe-oscuro bg-white border border-crema-oscura hover:bg-crema-oscura'}`}
           >
             <span className="text-lg leading-none">+</span> Agregar Ramo
@@ -289,7 +356,7 @@ export default function Admin() {
             className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
               flex items-center gap-2
               ${tab === 'promociones'
-                ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-white shadow-lg scale-105'
                 : 'text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100'}`}
           >
             🏷️ Promociones
@@ -310,30 +377,28 @@ export default function Admin() {
                 {error}
               </div>
             )}
-
             {loadingRamos ? (
               <Spinner size="lg" />
             ) : ramos.length === 0 ? (
               <div className="text-center py-20">
                 <span className="text-6xl block mb-4">🌸</span>
                 <p className="font-playfair text-cafe-oscuro text-lg">No hay ramos aún.</p>
-                <button
-                  onClick={() => setTab('form')}
-                  className="mt-4 bg-verde-bosque text-white font-lato font-bold px-6 py-2 rounded-lg hover:bg-verde-marino transition-colors"
-                >
+                <button onClick={() => setTab('form')}
+                  className="mt-4 bg-verde-bosque text-white font-lato font-bold px-6 py-2 rounded-lg hover:bg-verde-marino transition-colors">
                   Agregar primer ramo
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {ramos.map((ramo) => (
+              <div className="space-y-3">
+                {ramos.map((ramo, idx) => (
                   <div
                     key={ramo.id}
                     className="bg-white rounded-xl shadow-[0_2px_12px_rgba(59,31,14,0.08)]
                                flex items-center gap-4 p-4 transition-all duration-300
-                               hover:shadow-[0_4px_20px_rgba(59,31,14,0.14)]"
+                               hover:shadow-[0_6px_24px_rgba(59,31,14,0.14)]
+                               hover:-translate-y-0.5 animate-slide-in-left"
+                    style={{ animationDelay: `${idx * 0.05}s` }}
                   >
-                    {/* Foto miniatura */}
                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-crema-oscura">
                       {ramo.foto_url ? (
                         <img src={ramo.foto_url} alt={ramo.nombre} className="w-full h-full object-cover" />
@@ -342,7 +407,6 @@ export default function Admin() {
                       )}
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <p className="font-playfair font-semibold text-cafe-oscuro truncate">{ramo.nombre}</p>
@@ -357,10 +421,22 @@ export default function Admin() {
                         {ramo.flores?.join(', ')}
                       </p>
                       {ramo.precio && (
-                        <p className={`font-lato font-bold text-sm
-                          ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-claro'}`}>
-                          ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
-                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {ramo.en_promocion && ramo.precio_promocion ? (
+                            <>
+                              <span className="font-lato text-xs text-cafe-medio/60 line-through">
+                                ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </span>
+                              <span className="font-lato font-bold text-sm text-amber-600">
+                                ${Number(ramo.precio_promocion).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-lato font-bold text-sm text-cafe-claro">
+                              ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -370,7 +446,6 @@ export default function Admin() {
                         onClick={() => toggleDisponible(ramo)}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
                           ${ramo.disponible ? 'bg-verde-pistache' : 'bg-gray-300'}`}
-                        title={ramo.disponible ? 'Deshabilitar' : 'Habilitar'}
                       >
                         <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
                           ${ramo.disponible ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -380,13 +455,12 @@ export default function Admin() {
                       </span>
                     </div>
 
-                    {/* Toggle promoción */}
+                    {/* Toggle promo */}
                     <div className="flex flex-col items-center gap-1 flex-shrink-0">
                       <button
                         onClick={() => togglePromocion(ramo)}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
                           ${ramo.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
-                        title={ramo.en_promocion ? 'Quitar oferta' : 'Activar oferta'}
                       >
                         <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
                           ${ramo.en_promocion ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -398,18 +472,12 @@ export default function Admin() {
 
                     {/* Acciones */}
                     <div className="flex gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => iniciarEdicion(ramo)}
-                        title="Editar"
-                        className="p-2 rounded-lg hover:bg-crema-oscura text-cafe-medio transition-colors"
-                      >
+                      <button onClick={() => iniciarEdicion(ramo)} title="Editar"
+                        className="p-2 rounded-lg hover:bg-crema-oscura text-cafe-medio transition-colors hover:scale-110 transition-transform">
                         ✏️
                       </button>
-                      <button
-                        onClick={() => setConfirmEliminar(ramo)}
-                        title="Eliminar"
-                        className="p-2 rounded-lg hover:bg-red-50 text-red-400 transition-colors"
-                      >
+                      <button onClick={() => setConfirmEliminar(ramo)} title="Eliminar"
+                        className="p-2 rounded-lg hover:bg-red-50 text-red-400 transition-colors hover:scale-110 transition-transform">
                         🗑️
                       </button>
                     </div>
@@ -426,8 +494,7 @@ export default function Admin() {
             <div className="mb-6">
               <h2 className="font-playfair text-2xl font-bold text-cafe-oscuro mb-1">Gestión de Promociones</h2>
               <p className="font-lato font-light text-sm text-cafe-medio">
-                Los ramos con precio ≥ $1,500 MXN se marcan como oferta automáticamente al crearlos.
-                Puedes activar o desactivar manualmente desde aquí.
+                Activa la oferta y establece el precio de promoción. El precio original aparecerá tachado en el catálogo.
               </p>
             </div>
 
@@ -437,63 +504,141 @@ export default function Admin() {
               <p className="text-cafe-medio font-lato text-center py-16">No hay ramos registrados.</p>
             ) : (
               <div className="space-y-4">
-                {ramos.map((ramo) => (
-                  <div
-                    key={ramo.id}
-                    className={`rounded-xl p-4 flex items-center gap-4 transition-all duration-300
-                      border-2 ${ramo.en_promocion
-                        ? 'bg-amber-50 border-amber-300 shadow-[0_2px_16px_rgba(251,191,36,0.2)]'
-                        : 'bg-white border-transparent shadow-[0_2px_12px_rgba(59,31,14,0.08)]'}`}
-                  >
-                    {/* Foto */}
-                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-crema-oscura">
-                      {ramo.foto_url ? (
-                        <img src={ramo.foto_url} alt={ramo.nombre} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xl opacity-40">🌸</div>
-                      )}
-                    </div>
+                {ramos.map((ramo, idx) => {
+                  const editVal  = precioPromoEdit[ramo.id]
+                  const inputVal = editVal !== undefined ? editVal : (ramo.precio_promocion || '')
+                  const tienePromo = ramo.en_promocion && ramo.precio_promocion
+                  const ahorro = tienePromo
+                    ? Number(ramo.precio) - Number(ramo.precio_promocion)
+                    : null
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-playfair font-semibold text-cafe-oscuro truncate">{ramo.nombre}</p>
-                      {ramo.precio && (
-                        <p className={`font-lato font-bold text-sm ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-claro'}`}>
-                          ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
-                          {Number(ramo.precio) >= 1500 && (
-                            <span className="ml-2 text-xs text-amber-500 font-normal">≥ $1,500</span>
-                          )}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Estado y toggle */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`font-lato font-bold text-xs px-3 py-1 rounded-full
+                  return (
+                    <div
+                      key={ramo.id}
+                      className={`rounded-2xl p-5 transition-all duration-400 animate-slide-in-left
                         ${ramo.en_promocion
-                          ? 'bg-amber-400 text-white'
-                          : 'bg-gray-100 text-cafe-medio'}`}>
-                        {ramo.en_promocion ? '🏷️ En oferta' : 'Sin oferta'}
-                      </span>
-                      <button
-                        onClick={() => togglePromocion(ramo)}
-                        className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200
-                          ${ramo.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
-                        style={{ width: '52px' }}
-                        title={ramo.en_promocion ? 'Desactivar oferta' : 'Activar oferta'}
-                      >
-                        <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform duration-200
-                          ${ramo.en_promocion ? 'translate-x-7' : 'translate-x-1'}`} />
-                      </button>
+                          ? 'bg-amber-50 border-2 border-amber-300 shadow-[0_4px_20px_rgba(251,191,36,0.18)]'
+                          : 'bg-white border-2 border-transparent shadow-[0_2px_12px_rgba(59,31,14,0.08)]'}`}
+                      style={{ animationDelay: `${idx * 0.06}s` }}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Foto */}
+                        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-crema-oscura">
+                          {ramo.foto_url ? (
+                            <img src={ramo.foto_url} alt={ramo.nombre} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl opacity-40">🌸</div>
+                          )}
+                        </div>
+
+                        {/* Info + controles */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-playfair font-semibold text-cafe-oscuro">{ramo.nombre}</p>
+                            {promoExito === ramo.id && (
+                              <span className="text-xs text-green-600 font-lato font-bold animate-bounce-in">
+                                ✓ Guardado
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Precios actuales */}
+                          <div className="flex items-center gap-3 mb-3">
+                            <div>
+                              <span className="font-lato text-xs text-cafe-medio/60 uppercase tracking-wide">Precio original</span>
+                              <p className={`font-playfair font-bold text-lg
+                                ${tienePromo ? 'text-cafe-medio/50 line-through' : 'text-cafe-claro'}`}>
+                                ${Number(ramo.precio || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                              </p>
+                            </div>
+                            {tienePromo && (
+                              <>
+                                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
+                                <div>
+                                  <span className="font-lato text-xs text-amber-600 uppercase tracking-wide">Precio oferta</span>
+                                  <p className="font-playfair font-bold text-lg text-amber-600">
+                                    ${Number(ramo.precio_promocion).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                  </p>
+                                </div>
+                                <div className="ml-1">
+                                  <span className="inline-block bg-green-100 border border-green-300 text-green-700
+                                                   font-lato font-bold text-xs px-2 py-1 rounded-full">
+                                    -{Math.round((ahorro / Number(ramo.precio)) * 100)}% off
+                                  </span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Campo editable precio promo (solo si está en promo) */}
+                          {ramo.en_promocion && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-lato text-sm text-cafe-oscuro font-semibold">
+                                Precio de oferta:
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-lato text-cafe-claro font-bold">$</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={inputVal}
+                                  onChange={(e) =>
+                                    setPrecioPromoEdit((prev) => ({ ...prev, [ramo.id]: e.target.value }))
+                                  }
+                                  onKeyDown={(e) => e.key === 'Enter' && savePromoPrice(ramo)}
+                                  placeholder="Ej: 1300"
+                                  className="w-28 border-2 border-amber-200 rounded-lg px-2.5 py-1.5
+                                             font-lato text-sm bg-white text-cafe-oscuro
+                                             focus:outline-none focus:border-amber-400 transition-colors"
+                                />
+                                <button
+                                  onClick={() => savePromoPrice(ramo)}
+                                  disabled={savingPromoId === ramo.id || editVal === undefined || editVal === ''}
+                                  className="bg-amber-500 hover:bg-amber-600 text-white font-lato font-bold
+                                             text-sm px-3 py-1.5 rounded-lg transition-colors duration-200
+                                             disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {savingPromoId === ramo.id ? '...' : 'Guardar'}
+                                </button>
+                              </div>
+                              {editVal && Number(ramo.precio) > 0 && parseFloat(editVal) > 0 && (
+                                <span className="font-lato text-xs text-green-600 font-semibold">
+                                  Ahorro: ${(Number(ramo.precio) - parseFloat(editVal)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Toggle */}
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => togglePromocion(ramo)}
+                            className={`relative inline-flex h-7 items-center rounded-full transition-colors duration-300
+                              ${ramo.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
+                            style={{ width: '52px' }}
+                          >
+                            <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transform transition-transform duration-300
+                              ${ramo.en_promocion ? 'translate-x-7' : 'translate-x-1'}`} />
+                          </button>
+                          <span className={`text-xs font-lato font-bold
+                            ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-medio'}`}>
+                            {ramo.en_promocion ? '🏷️ Activa' : 'Inactiva'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
             {!loadingRamos && ramosEnPromocion.length === 0 && ramos.length > 0 && (
-              <div className="mt-8 text-center py-8 bg-amber-50 rounded-2xl border border-amber-200">
-                <span className="text-4xl block mb-3">🏷️</span>
+              <div className="mt-8 text-center py-10 bg-amber-50 rounded-2xl border-2 border-dashed border-amber-200">
+                <span className="text-5xl block mb-3">🏷️</span>
                 <p className="font-playfair text-cafe-oscuro font-semibold mb-1">Sin ofertas activas</p>
                 <p className="font-lato font-light text-sm text-cafe-medio">
                   Activa el toggle en cualquier ramo para marcarlo como oferta especial.
@@ -511,12 +656,12 @@ export default function Admin() {
             </h2>
 
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-4 py-3 mb-4 font-lato text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-4 py-3 mb-4 font-lato text-sm animate-bounce-in">
                 {formError}
               </div>
             )}
             {formExito && (
-              <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 mb-4 font-lato text-sm">
+              <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 mb-4 font-lato text-sm animate-bounce-in">
                 {formExito}
               </div>
             )}
@@ -524,9 +669,7 @@ export default function Admin() {
             <div className="space-y-5">
               {/* Nombre */}
               <div>
-                <label className="block font-lato font-bold text-sm text-cafe-oscuro mb-1">
-                  Nombre del ramo *
-                </label>
+                <label className="block font-lato font-bold text-sm text-cafe-oscuro mb-1">Nombre del ramo *</label>
                 <input
                   type="text"
                   value={form.nombre}
@@ -534,67 +677,79 @@ export default function Admin() {
                   placeholder="Ej: Ramo Primaveral"
                   className="w-full border border-crema-oscura rounded-lg px-3 py-2.5
                              font-playfair text-cafe-oscuro bg-crema
-                             focus:outline-none focus:ring-2 focus:ring-cafe-claro"
+                             focus:outline-none focus:ring-2 focus:ring-cafe-claro transition-shadow"
                 />
               </div>
 
               {/* Descripción */}
               <div>
-                <label className="block font-lato font-bold text-sm text-cafe-oscuro mb-1">
-                  Descripción
-                </label>
+                <label className="block font-lato font-bold text-sm text-cafe-oscuro mb-1">Descripción</label>
                 <textarea
                   value={form.descripcion}
-                  onChange={(e) => {
-                    if (e.target.value.length <= 200) setForm({ ...form, descripcion: e.target.value })
-                  }}
+                  onChange={(e) => { if (e.target.value.length <= 200) setForm({ ...form, descripcion: e.target.value }) }}
                   rows={3}
                   placeholder="Describe el ramo brevemente..."
                   className="w-full border border-crema-oscura rounded-lg px-3 py-2.5
                              font-lato font-light text-sm text-cafe-oscuro bg-crema resize-none
-                             focus:outline-none focus:ring-2 focus:ring-cafe-claro"
+                             focus:outline-none focus:ring-2 focus:ring-cafe-claro transition-shadow"
                 />
-                <p className="text-xs font-lato text-cafe-claro text-right mt-1">
-                  {form.descripcion.length}/200
-                </p>
+                <p className="text-xs font-lato text-cafe-claro text-right mt-1">{form.descripcion.length}/200</p>
               </div>
 
               {/* Flores */}
               <div>
-                <label className="block font-lato font-bold text-sm text-cafe-oscuro mb-2">
-                  Flores que contiene *
-                </label>
-                <FloresInput
-                  flores={form.flores}
-                  onChange={(flores) => setForm({ ...form, flores })}
-                />
+                <label className="block font-lato font-bold text-sm text-cafe-oscuro mb-2">Flores que contiene *</label>
+                <FloresInput flores={form.flores} onChange={(flores) => setForm({ ...form, flores })} />
               </div>
 
               {/* Precio */}
               <div>
-                <label className="block font-lato font-bold text-sm text-cafe-oscuro mb-1">
-                  Precio (MXN) *
-                </label>
+                <label className="block font-lato font-bold text-sm text-cafe-oscuro mb-1">Precio (MXN) *</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 font-lato text-cafe-claro font-bold">$</span>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="number" min="0" step="0.01"
                     value={form.precio}
                     onChange={(e) => setForm({ ...form, precio: e.target.value })}
                     placeholder="350.00"
                     className="w-full pl-8 pr-4 py-2.5 border border-crema-oscura rounded-lg
                                font-lato text-cafe-oscuro bg-crema
-                               focus:outline-none focus:ring-2 focus:ring-cafe-claro"
+                               focus:outline-none focus:ring-2 focus:ring-cafe-claro transition-shadow"
                   />
                 </div>
                 {parseFloat(form.precio) >= 1500 && (
                   <p className="mt-1.5 text-xs font-lato text-amber-600 flex items-center gap-1">
-                    🏷️ Precio ≥ $1,500 — se activa oferta automáticamente
+                    🏷️ Precio ≥ $1,500 — oferta activada automáticamente
                   </p>
                 )}
               </div>
+
+              {/* Precio de promoción (visible solo si en_promocion) */}
+              {form.en_promocion && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 animate-price-drop">
+                  <label className="block font-lato font-bold text-sm text-amber-800 mb-1">
+                    🏷️ Precio de oferta (MXN)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-lato text-amber-600 font-bold">$</span>
+                    <input
+                      type="number" min="0" step="0.01"
+                      value={form.precio_promocion}
+                      onChange={(e) => setForm({ ...form, precio_promocion: e.target.value })}
+                      placeholder="Ej: 1300.00"
+                      className="w-full pl-8 pr-4 py-2.5 border border-amber-300 rounded-lg
+                                 font-lato text-cafe-oscuro bg-white
+                                 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-shadow"
+                    />
+                  </div>
+                  {ahorroForm !== null && (
+                    <p className="mt-2 text-xs font-lato text-green-700 font-semibold">
+                      ✓ El cliente ahorra ${ahorroForm.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                      ({Math.round((ahorroForm / precioOriginal) * 100)}% de descuento)
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Foto */}
               <div>
@@ -602,7 +757,7 @@ export default function Admin() {
                   Foto del ramo {!editandoId && '*'}
                 </label>
                 {preview && (
-                  <div className="mb-3 rounded-xl overflow-hidden aspect-[4/3] max-w-xs">
+                  <div className="mb-3 rounded-xl overflow-hidden aspect-[4/3] max-w-xs shadow-md">
                     <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 )}
@@ -619,7 +774,7 @@ export default function Admin() {
                 <p className="text-xs font-lato text-cafe-claro mt-1">JPG, PNG, WEBP — máx 5MB</p>
               </div>
 
-              {/* Disponible toggle */}
+              {/* Toggle disponible */}
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -635,7 +790,7 @@ export default function Admin() {
                 </span>
               </div>
 
-              {/* Promoción toggle */}
+              {/* Toggle en_promocion */}
               <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300
                 ${form.en_promocion ? 'bg-amber-50 border-amber-200' : 'bg-white border-crema-oscura'}`}>
                 <button
@@ -648,7 +803,7 @@ export default function Admin() {
                     ${form.en_promocion ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
                 <span className="font-lato text-sm text-cafe-oscuro">
-                  {form.en_promocion ? '🏷️ Marcar como oferta especial' : 'Sin oferta'}
+                  {form.en_promocion ? '🏷️ Activar como oferta especial' : 'Sin oferta'}
                 </span>
               </div>
 
@@ -658,7 +813,8 @@ export default function Admin() {
                   type="submit"
                   disabled={guardando}
                   className="flex-1 bg-verde-bosque hover:bg-verde-marino text-white font-lato font-bold
-                             py-3 rounded-lg transition-colors duration-200 disabled:opacity-60"
+                             py-3 rounded-lg transition-all duration-200 disabled:opacity-60
+                             hover:shadow-lg hover:-translate-y-0.5"
                 >
                   {guardando ? 'Guardando...' : 'Guardar Ramo'}
                 </button>
@@ -681,9 +837,7 @@ export default function Admin() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cafe-oscuro/70 backdrop-blur-sm">
           <div className="bg-crema rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-scale-in">
             <span className="text-4xl block mb-3">🗑️</span>
-            <h3 className="font-playfair text-xl font-bold text-cafe-oscuro mb-2">
-              ¿Eliminar ramo?
-            </h3>
+            <h3 className="font-playfair text-xl font-bold text-cafe-oscuro mb-2">¿Eliminar ramo?</h3>
             <p className="font-lato font-light text-cafe-medio text-sm mb-6">
               ¿Eliminar el ramo <strong>"{confirmEliminar.nombre}"</strong>?
               Esta acción no se puede deshacer.
