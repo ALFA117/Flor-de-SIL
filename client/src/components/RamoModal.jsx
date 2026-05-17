@@ -7,7 +7,8 @@ export default function RamoModal({ ramo, onClose }) {
     `Hola, me interesa el ramo *${ramo.nombre}*, ¿está disponible?`
   )}`
 
-  const tienePromo = ramo.en_promocion && ramo.precio_promocion && ramo.precio
+  const tienePromo = ramo.en_promocion && ramo.precio_promocion && ramo.precio &&
+    Number(ramo.precio_promocion) < Number(ramo.precio)
   const ahorro = tienePromo
     ? Number(ramo.precio) - Number(ramo.precio_promocion)
     : 0

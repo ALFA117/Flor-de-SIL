@@ -1,7 +1,8 @@
 const WA_NUMBER = '5215652539705'
 
 function PrecioDisplay({ ramo }) {
-  const tienePromo = ramo.en_promocion && ramo.precio_promocion
+  const tienePromo = ramo.en_promocion && ramo.precio_promocion &&
+    Number(ramo.precio_promocion) < Number(ramo.precio)
 
   if (!ramo.precio) return null
 
@@ -88,8 +89,9 @@ export default function RamoCard({ ramo, onClick }) {
           </span>
         )}
 
-        {/* Ahorro badge (solo si tiene precio promo) */}
-        {ramo.en_promocion && ramo.precio_promocion && ramo.precio && (
+        {/* Ahorro badge (solo si tiene precio promo válido) */}
+        {ramo.en_promocion && ramo.precio_promocion && ramo.precio &&
+         Number(ramo.precio_promocion) < Number(ramo.precio) && (
           <span className="absolute top-3 right-3 bg-red-500 text-white
                            text-xs font-lato font-bold px-2 py-1 rounded-full shadow-md
                            animate-bounce-in">

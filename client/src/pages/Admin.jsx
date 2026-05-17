@@ -42,6 +42,7 @@ export default function Admin() {
   const [precioPromoEdit, setPrecioPromoEdit] = useState({})
   const [savingPromoId, setSavingPromoId] = useState(null)
   const [promoExito, setPromoExito] = useState(null)
+  const [promoError, setPromoError] = useState({})
 
   const fileRef = useRef(null)
 
@@ -137,9 +138,22 @@ export default function Admin() {
   const savePromoPrice = async (ramo) => {
     const rawValue = precioPromoEdit[ramo.id]
     if (rawValue === undefined || rawValue === '') return
-    const nuevoPrecio = parseFloat(rawValue)
-    if (isNaN(nuevoPrecio) || nuevoPrecio <= 0) return
+    const nuevoPrecio  = parseFloat(rawValue)
+    const precioOriginal = Number(ramo.precio)
 
+    if (isNaN(nuevoPrecio) || nuevoPrecio <= 0) {
+      setPromoError((prev) => ({ ...prev, [ramo.id]: 'Ingresa un precio válido mayor a 0.' }))
+      return
+    }
+    if (nuevoPrecio >= precioOriginal) {
+      setPromoError((prev) => ({
+        ...prev,
+        [ramo.id]: `El precio de oferta debe ser menor al precio original ($${precioOriginal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN).`,
+      }))
+      return
+    }
+
+    setPromoError((prev) => { const n = { ...prev }; delete n[ramo.id]; return n })
     setSavingPromoId(ramo.id)
     try {
       await api.put(`/api/ramos/${ramo.id}`, { precio_promocion: String(nuevoPrecio) })
@@ -148,9 +162,9 @@ export default function Admin() {
       )
       setPrecioPromoEdit((prev) => { const n = { ...prev }; delete n[ramo.id]; return n })
       setPromoExito(ramo.id)
-      setTimeout(() => setPromoExito(null), 2000)
+      setTimeout(() => setPromoExito(null), 2500)
     } catch {
-      // silently ignore
+      setPromoError((prev) => ({ ...prev, [ramo.id]: 'Error al guardar. Intenta de nuevo.' }))
     } finally {
       setSavingPromoId(null)
     }
@@ -507,7 +521,8 @@ export default function Admin() {
                 {ramos.map((ramo, idx) => {
                   const editVal  = precioPromoEdit[ramo.id]
                   const inputVal = editVal !== undefined ? editVal : (ramo.precio_promocion || '')
-                  const tienePromo = ramo.en_promocion && ramo.precio_promocion
+                  const tienePromo = ramo.en_promocion && ramo.precio_promocion &&
+                    Number(ramo.precio_promocion) < Number(ramo.precio)
                   const ahorro = tienePromo
                     ? Number(ramo.precio) - Number(ramo.precio_promocion)
                     : null
@@ -574,40 +589,64 @@ export default function Admin() {
 
                           {/* Campo editable precio promo (solo si está en promo) */}
                           {ramo.en_promocion && (
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-lato text-sm text-cafe-oscuro font-semibold">
-                                Precio de oferta:
-                              </span>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-lato text-cafe-claro font-bold">$</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={inputVal}
-                                  onChange={(e) =>
-                                    setPrecioPromoEdit((prev) => ({ ...prev, [ramo.id]: e.target.value }))
-                                  }
-                                  onKeyDown={(e) => e.key === 'Enter' && savePromoPrice(ramo)}
-                                  placeholder="Ej: 1300"
-                                  className="w-28 border-2 border-amber-200 rounded-lg px-2.5 py-1.5
-                                             font-lato text-sm bg-white text-cafe-oscuro
-                                             focus:outline-none focus:border-amber-400 transition-colors"
-                                />
-                                <button
-                                  onClick={() => savePromoPrice(ramo)}
-                                  disabled={savingPromoId === ramo.id || editVal === undefined || editVal === ''}
-                                  className="bg-amber-500 hover:bg-amber-600 text-white font-lato font-bold
-                                             text-sm px-3 py-1.5 rounded-lg transition-colors duration-200
-                                             disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {savingPromoId === ramo.id ? '...' : 'Guardar'}
-                                </button>
-                              </div>
-                              {editVal && Number(ramo.precio) > 0 && parseFloat(editVal) > 0 && (
-                                <span className="font-lato text-xs text-green-600 font-semibold">
-                                  Ahorro: ${(Number(ramo.precio) - parseFloat(editVal)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-lato text-sm text-cafe-oscuro font-semibold">
+                                  Precio de oferta:
                                 </span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-lato text-cafe-claro font-bold">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={inputVal}
+                                    onChange={(e) => {
+                                      const val = e.target.value
+                                      setPrecioPromoEdit((prev) => ({ ...prev, [ramo.id]: val }))
+                                      // Limpiar error al escribir
+                                      setPromoError((prev) => { const n = { ...prev }; delete n[ramo.id]; return n })
+                                    }}
+                                    onKeyDown={(e) => e.key === 'Enter' && savePromoPrice(ramo)}
+                                    placeholder="Ej: 1300"
+                                    className={`w-28 border-2 rounded-lg px-2.5 py-1.5
+                                               font-lato text-sm bg-white text-cafe-oscuro
+                                               focus:outline-none transition-colors
+                                               ${promoError[ramo.id]
+                                                 ? 'border-red-400 focus:border-red-500'
+                                                 : 'border-amber-200 focus:border-amber-400'}`}
+                                  />
+                                  <button
+                                    onClick={() => savePromoPrice(ramo)}
+                                    disabled={
+                                      savingPromoId === ramo.id ||
+                                      editVal === undefined ||
+                                      editVal === '' ||
+                                      !!promoError[ramo.id]
+                                    }
+                                    className="bg-amber-500 hover:bg-amber-600 text-white font-lato font-bold
+                                               text-sm px-3 py-1.5 rounded-lg transition-colors duration-200
+                                               disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {savingPromoId === ramo.id ? '...' : 'Guardar'}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Error en tiempo real */}
+                              {promoError[ramo.id] && (
+                                <p className="font-lato text-xs text-red-600 font-semibold flex items-center gap-1 animate-bounce-in">
+                                  ✕ {promoError[ramo.id]}
+                                </p>
+                              )}
+
+                              {/* Preview de ahorro (solo si es válido) */}
+                              {editVal && !promoError[ramo.id] &&
+                               Number(ramo.precio) > 0 && parseFloat(editVal) > 0 &&
+                               parseFloat(editVal) < Number(ramo.precio) && (
+                                <p className="font-lato text-xs text-green-600 font-semibold">
+                                  ✓ El cliente ahorra ${(Number(ramo.precio) - parseFloat(editVal)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                </p>
                               )}
                             </div>
                           )}
