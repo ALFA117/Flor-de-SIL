@@ -118,12 +118,3 @@
   }
 }
 
-/* Cards ocultos antes de animar con IntersectionObserver */
-.card-hidden {
-  opacity: 0;
-  transform: translateY(40px) scale(0.97);
-}
-
-.card-visible {
-  animation: slideUpCard 0.6s cubic-bezier(.22,1,.36,1) forwards;
-}

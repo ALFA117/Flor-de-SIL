@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import supabase from '../lib/supabase'
 import RamoCard from '../components/RamoCard'
 import RamoModal from '../components/RamoModal'
@@ -13,7 +13,6 @@ export default function Catalogo() {
   const [error, setError] = useState(null)
   const [ramoSeleccionado, setRamoSeleccionado] = useState(null)
   const catalogoRef = useRef(null)
-  const cardsRef = useRef([])
 
   // Cargar ramos + incrementar contador de visitas al montar
   useEffect(() => {
@@ -30,37 +29,6 @@ export default function Catalogo() {
       })
       .catch(() => setError('No pudimos cargar el catálogo. Intenta más tarde.'))
       .finally(() => setLoading(false))
-  }, [])
-
-  // IntersectionObserver: animar cards al entrar en viewport
-  useEffect(() => {
-    if (loading || ramos.length === 0) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.remove('card-hidden')
-            entry.target.classList.add('card-visible')
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-    )
-
-    cardsRef.current.forEach((el) => {
-      if (el) {
-        el.classList.add('card-hidden')
-        observer.observe(el)
-      }
-    })
-
-    return () => observer.disconnect()
-  }, [loading, ramos])
-
-  const setCardRef = useCallback((el, i) => {
-    cardsRef.current[i] = el
   }, [])
 
   const scrollAlCatalogo = () => {
@@ -208,8 +176,8 @@ export default function Catalogo() {
               {ramos.map((ramo, i) => (
                 <div
                   key={ramo.id}
-                  ref={(el) => setCardRef(el, i)}
-                  style={{ animationDelay: `${i * 0.08}s` }}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${i * 0.1}s` }}
                 >
                   <RamoCard
                     ramo={ramo}
