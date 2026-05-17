@@ -9,9 +9,10 @@ export default function RamoCard({ ramo, onClick }) {
     <article
       className="group bg-white rounded-2xl overflow-hidden
                  shadow-[0_4px_24px_rgba(59,31,14,0.10)]
-                 hover:shadow-[0_12px_40px_rgba(59,31,14,0.22)]
-                 hover:-translate-y-2 transition-all duration-400 ease-out
-                 flex flex-col cursor-pointer border border-crema-oscura/40"
+                 hover:shadow-[0_16px_48px_rgba(59,31,14,0.25)]
+                 hover:-translate-y-3 transition-all duration-500 ease-out
+                 flex flex-col cursor-pointer border border-crema-oscura/40
+                 relative"
       onClick={onClick}
     >
       {/* Foto */}
@@ -20,7 +21,7 @@ export default function RamoCard({ ramo, onClick }) {
           <img
             src={ramo.foto_url}
             alt={ramo.nombre}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
             loading="lazy"
           />
         ) : (
@@ -31,13 +32,34 @@ export default function RamoCard({ ramo, onClick }) {
         )}
 
         {/* Overlay degradado en la foto */}
-        <div className="absolute inset-0 bg-gradient-to-t from-cafe-oscuro/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+        <div className="absolute inset-0 bg-gradient-to-t from-cafe-oscuro/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-        {/* Badge disponible */}
-        <span className="absolute top-3 left-3 bg-verde-pistache/90 backdrop-blur-sm text-cafe-oscuro
-                         text-xs font-lato font-bold px-3 py-1 rounded-full shadow-sm">
-          ✓ Disponible
-        </span>
+        {/* Badge de estado: Promoción tiene prioridad */}
+        {ramo.en_promocion ? (
+          <span className="absolute top-3 left-3 flex items-center gap-1
+                           bg-gradient-to-r from-amber-500 to-yellow-400
+                           text-white text-xs font-lato font-bold
+                           px-3 py-1 rounded-full shadow-md promo-glow">
+            🏷️ OFERTA
+          </span>
+        ) : (
+          <span className="absolute top-3 left-3 bg-verde-pistache/90 backdrop-blur-sm text-cafe-oscuro
+                           text-xs font-lato font-bold px-3 py-1 rounded-full shadow-sm">
+            ✓ Disponible
+          </span>
+        )}
+
+        {/* Ícono de lupa al hover */}
+        <div className="absolute inset-0 flex items-center justify-center
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-400">
+          <div className="bg-white/20 backdrop-blur-sm rounded-full p-3
+                          transform scale-75 group-hover:scale-100 transition-transform duration-400">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Contenido */}
@@ -59,7 +81,8 @@ export default function RamoCard({ ramo, onClick }) {
             {ramo.flores.map((flor, i) => (
               <span key={i}
                 className="inline-flex items-center gap-1 bg-crema text-cafe-medio
-                           text-xs font-lato px-2.5 py-1 rounded-full border border-crema-oscura">
+                           text-xs font-lato px-2.5 py-1 rounded-full border border-crema-oscura
+                           transition-colors duration-200 group-hover:border-cafe-claro/40">
                 🌸 {flor}
               </span>
             ))}
@@ -68,10 +91,19 @@ export default function RamoCard({ ramo, onClick }) {
 
         <div className="mt-auto pt-3 border-t border-crema-oscura/50">
           {ramo.precio && (
-            <p className="font-playfair font-bold text-cafe-claro text-xl mb-3">
-              ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-              <span className="font-lato font-light text-sm text-cafe-medio ml-1">MXN</span>
-            </p>
+            <div className="flex items-center gap-2 mb-3">
+              <p className={`font-playfair font-bold text-xl
+                ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-claro'}`}>
+                ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                <span className="font-lato font-light text-sm text-cafe-medio ml-1">MXN</span>
+              </p>
+              {ramo.en_promocion && (
+                <span className="text-xs font-lato font-bold text-amber-600 bg-amber-50
+                                 border border-amber-200 px-2 py-0.5 rounded-full">
+                  Especial
+                </span>
+              )}
+            </div>
           )}
 
           <a

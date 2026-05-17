@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import supabase from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import FloresInput from '../components/FloresInput'
 import Spinner from '../components/Spinner'
@@ -11,6 +12,7 @@ const FORM_INICIAL = {
   flores: [],
   precio: '',
   disponible: true,
+  en_promocion: false,
   foto: null,
 }
 
@@ -18,10 +20,11 @@ export default function Admin() {
   const { logout } = useAuth()
   const navigate = useNavigate()
 
-  const [tab, setTab] = useState('catalogo') // 'catalogo' | 'form'
+  const [tab, setTab] = useState('catalogo') // 'catalogo' | 'form' | 'promociones'
   const [ramos, setRamos] = useState([])
   const [loadingRamos, setLoadingRamos] = useState(true)
   const [error, setError] = useState(null)
+  const [visitas, setVisitas] = useState(null)
 
   const [form, setForm] = useState(FORM_INICIAL)
   const [editandoId, setEditandoId] = useState(null)
@@ -31,7 +34,7 @@ export default function Admin() {
   const [formExito, setFormExito] = useState(null)
 
   const [eliminandoId, setEliminandoId] = useState(null)
-  const [confirmEliminar, setConfirmEliminar] = useState(null) // ramo
+  const [confirmEliminar, setConfirmEliminar] = useState(null)
 
   const fileRef = useRef(null)
 
@@ -43,7 +46,27 @@ export default function Admin() {
       .finally(() => setLoadingRamos(false))
   }
 
-  useEffect(() => { cargarRamos() }, [])
+  const cargarVisitas = async () => {
+    const { data } = await supabase
+      .from('config')
+      .select('valor')
+      .eq('clave', 'visitas_pagina')
+      .single()
+    if (data) setVisitas(Number(data.valor))
+  }
+
+  useEffect(() => {
+    cargarRamos()
+    cargarVisitas()
+  }, [])
+
+  // Auto-activar promoción si precio >= 1500
+  useEffect(() => {
+    const precio = parseFloat(form.precio)
+    if (!isNaN(precio) && precio >= 1500 && !form.en_promocion) {
+      setForm((f) => ({ ...f, en_promocion: true }))
+    }
+  }, [form.precio])
 
   const handleLogout = () => {
     logout()
@@ -52,16 +75,28 @@ export default function Admin() {
 
   // ── Toggle disponible ──
   const toggleDisponible = async (ramo) => {
-    // Optimistic UI
     setRamos((prev) =>
       prev.map((r) => r.id === ramo.id ? { ...r, disponible: !r.disponible } : r)
     )
     try {
       await api.put(`/api/ramos/${ramo.id}`, { disponible: String(!ramo.disponible) })
     } catch {
-      // Revertir
       setRamos((prev) =>
         prev.map((r) => r.id === ramo.id ? { ...r, disponible: ramo.disponible } : r)
+      )
+    }
+  }
+
+  // ── Toggle en_promocion ──
+  const togglePromocion = async (ramo) => {
+    setRamos((prev) =>
+      prev.map((r) => r.id === ramo.id ? { ...r, en_promocion: !r.en_promocion } : r)
+    )
+    try {
+      await api.put(`/api/ramos/${ramo.id}`, { en_promocion: String(!ramo.en_promocion) })
+    } catch {
+      setRamos((prev) =>
+        prev.map((r) => r.id === ramo.id ? { ...r, en_promocion: ramo.en_promocion } : r)
       )
     }
   }
@@ -75,6 +110,7 @@ export default function Admin() {
       flores: ramo.flores || [],
       precio: ramo.precio || '',
       disponible: ramo.disponible,
+      en_promocion: ramo.en_promocion || false,
       foto: null,
     })
     setPreview(ramo.foto_url || null)
@@ -123,6 +159,7 @@ export default function Admin() {
       fd.append('flores', JSON.stringify(form.flores))
       fd.append('precio', form.precio)
       fd.append('disponible', String(form.disponible))
+      fd.append('en_promocion', String(form.en_promocion))
       if (form.foto) fd.append('foto', form.foto)
 
       if (editandoId) {
@@ -161,6 +198,8 @@ export default function Admin() {
     }
   }
 
+  const ramosEnPromocion = ramos.filter((r) => r.en_promocion)
+
   return (
     <div className="min-h-screen bg-crema">
       {/* Header Admin */}
@@ -189,8 +228,43 @@ export default function Admin() {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
+
+        {/* ── Widget de visitas ── */}
+        {visitas !== null && (
+          <div className="mb-6 bg-gradient-to-r from-verde-marino to-cafe-oscuro
+                          rounded-2xl p-5 flex items-center gap-5 shadow-lg animate-fade-in-down">
+            <div className="w-12 h-12 rounded-full bg-cafe-claro/20 flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-cafe-claro" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-lato text-xs text-verde-pistache uppercase tracking-widest mb-0.5">
+                Visitas totales a la página
+              </p>
+              <p className="font-playfair font-bold text-3xl text-crema animate-count-up">
+                {visitas.toLocaleString('es-MX')}
+              </p>
+            </div>
+            <button
+              onClick={cargarVisitas}
+              title="Actualizar"
+              className="ml-auto p-2 rounded-lg hover:bg-white/10 text-verde-pistache
+                         transition-colors duration-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* Tabs */}
-        <div className="flex gap-3 mb-8">
+        <div className="flex gap-3 mb-8 flex-wrap">
           <button
             onClick={() => { setTab('catalogo'); setEditandoId(null); setForm(FORM_INICIAL); setPreview(null) }}
             className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
@@ -209,6 +283,22 @@ export default function Admin() {
                 : 'text-cafe-oscuro bg-white border border-crema-oscura hover:bg-crema-oscura'}`}
           >
             <span className="text-lg leading-none">+</span> Agregar Ramo
+          </button>
+          <button
+            onClick={() => setTab('promociones')}
+            className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
+              flex items-center gap-2
+              ${tab === 'promociones'
+                ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-white shadow-lg'
+                : 'text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100'}`}
+          >
+            🏷️ Promociones
+            {ramosEnPromocion.length > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold
+                ${tab === 'promociones' ? 'bg-white/30 text-white' : 'bg-amber-500 text-white'}`}>
+                {ramosEnPromocion.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -240,7 +330,8 @@ export default function Admin() {
                   <div
                     key={ramo.id}
                     className="bg-white rounded-xl shadow-[0_2px_12px_rgba(59,31,14,0.08)]
-                               flex items-center gap-4 p-4"
+                               flex items-center gap-4 p-4 transition-all duration-300
+                               hover:shadow-[0_4px_20px_rgba(59,31,14,0.14)]"
                   >
                     {/* Foto miniatura */}
                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-crema-oscura">
@@ -253,12 +344,21 @@ export default function Admin() {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-playfair font-semibold text-cafe-oscuro truncate">{ramo.nombre}</p>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-playfair font-semibold text-cafe-oscuro truncate">{ramo.nombre}</p>
+                        {ramo.en_promocion && (
+                          <span className="text-xs bg-amber-100 text-amber-700 border border-amber-200
+                                           font-lato font-bold px-2 py-0.5 rounded-full flex-shrink-0">
+                            🏷️ Oferta
+                          </span>
+                        )}
+                      </div>
                       <p className="font-lato font-light text-xs text-cafe-medio truncate">
                         {ramo.flores?.join(', ')}
                       </p>
                       {ramo.precio && (
-                        <p className="font-lato font-bold text-cafe-claro text-sm">
+                        <p className={`font-lato font-bold text-sm
+                          ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-claro'}`}>
                           ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                         </p>
                       )}
@@ -272,13 +372,27 @@ export default function Admin() {
                           ${ramo.disponible ? 'bg-verde-pistache' : 'bg-gray-300'}`}
                         title={ramo.disponible ? 'Deshabilitar' : 'Habilitar'}
                       >
-                        <span
-                          className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
-                            ${ramo.disponible ? 'translate-x-6' : 'translate-x-1'}`}
-                        />
+                        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
+                          ${ramo.disponible ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                       <span className="text-xs font-lato text-cafe-medio">
-                        {ramo.disponible ? 'Disponible' : 'Oculto'}
+                        {ramo.disponible ? 'Visible' : 'Oculto'}
+                      </span>
+                    </div>
+
+                    {/* Toggle promoción */}
+                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => togglePromocion(ramo)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
+                          ${ramo.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
+                        title={ramo.en_promocion ? 'Quitar oferta' : 'Activar oferta'}
+                      >
+                        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
+                          ${ramo.en_promocion ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                      <span className="text-xs font-lato text-cafe-medio">
+                        {ramo.en_promocion ? 'Oferta' : 'Normal'}
                       </span>
                     </div>
 
@@ -301,6 +415,89 @@ export default function Admin() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TAB PROMOCIONES ── */}
+        {tab === 'promociones' && (
+          <div>
+            <div className="mb-6">
+              <h2 className="font-playfair text-2xl font-bold text-cafe-oscuro mb-1">Gestión de Promociones</h2>
+              <p className="font-lato font-light text-sm text-cafe-medio">
+                Los ramos con precio ≥ $1,500 MXN se marcan como oferta automáticamente al crearlos.
+                Puedes activar o desactivar manualmente desde aquí.
+              </p>
+            </div>
+
+            {loadingRamos ? (
+              <Spinner size="lg" />
+            ) : ramos.length === 0 ? (
+              <p className="text-cafe-medio font-lato text-center py-16">No hay ramos registrados.</p>
+            ) : (
+              <div className="space-y-4">
+                {ramos.map((ramo) => (
+                  <div
+                    key={ramo.id}
+                    className={`rounded-xl p-4 flex items-center gap-4 transition-all duration-300
+                      border-2 ${ramo.en_promocion
+                        ? 'bg-amber-50 border-amber-300 shadow-[0_2px_16px_rgba(251,191,36,0.2)]'
+                        : 'bg-white border-transparent shadow-[0_2px_12px_rgba(59,31,14,0.08)]'}`}
+                  >
+                    {/* Foto */}
+                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-crema-oscura">
+                      {ramo.foto_url ? (
+                        <img src={ramo.foto_url} alt={ramo.nombre} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xl opacity-40">🌸</div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-playfair font-semibold text-cafe-oscuro truncate">{ramo.nombre}</p>
+                      {ramo.precio && (
+                        <p className={`font-lato font-bold text-sm ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-claro'}`}>
+                          ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                          {Number(ramo.precio) >= 1500 && (
+                            <span className="ml-2 text-xs text-amber-500 font-normal">≥ $1,500</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Estado y toggle */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span className={`font-lato font-bold text-xs px-3 py-1 rounded-full
+                        ${ramo.en_promocion
+                          ? 'bg-amber-400 text-white'
+                          : 'bg-gray-100 text-cafe-medio'}`}>
+                        {ramo.en_promocion ? '🏷️ En oferta' : 'Sin oferta'}
+                      </span>
+                      <button
+                        onClick={() => togglePromocion(ramo)}
+                        className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200
+                          ${ramo.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
+                        style={{ width: '52px' }}
+                        title={ramo.en_promocion ? 'Desactivar oferta' : 'Activar oferta'}
+                      >
+                        <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform duration-200
+                          ${ramo.en_promocion ? 'translate-x-7' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loadingRamos && ramosEnPromocion.length === 0 && ramos.length > 0 && (
+              <div className="mt-8 text-center py-8 bg-amber-50 rounded-2xl border border-amber-200">
+                <span className="text-4xl block mb-3">🏷️</span>
+                <p className="font-playfair text-cafe-oscuro font-semibold mb-1">Sin ofertas activas</p>
+                <p className="font-lato font-light text-sm text-cafe-medio">
+                  Activa el toggle en cualquier ramo para marcarlo como oferta especial.
+                </p>
               </div>
             )}
           </div>
@@ -392,6 +589,11 @@ export default function Admin() {
                                focus:outline-none focus:ring-2 focus:ring-cafe-claro"
                   />
                 </div>
+                {parseFloat(form.precio) >= 1500 && (
+                  <p className="mt-1.5 text-xs font-lato text-amber-600 flex items-center gap-1">
+                    🏷️ Precio ≥ $1,500 — se activa oferta automáticamente
+                  </p>
+                )}
               </div>
 
               {/* Foto */}
@@ -425,13 +627,28 @@ export default function Admin() {
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
                     ${form.disponible ? 'bg-verde-pistache' : 'bg-gray-300'}`}
                 >
-                  <span
-                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
-                      ${form.disponible ? 'translate-x-6' : 'translate-x-1'}`}
-                  />
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
+                    ${form.disponible ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
                 <span className="font-lato text-sm text-cafe-oscuro">
                   {form.disponible ? 'Disponible al guardar' : 'No disponible al guardar'}
+                </span>
+              </div>
+
+              {/* Promoción toggle */}
+              <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300
+                ${form.en_promocion ? 'bg-amber-50 border-amber-200' : 'bg-white border-crema-oscura'}`}>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, en_promocion: !form.en_promocion })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
+                    ${form.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
+                >
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
+                    ${form.en_promocion ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+                <span className="font-lato text-sm text-cafe-oscuro">
+                  {form.en_promocion ? '🏷️ Marcar como oferta especial' : 'Sin oferta'}
                 </span>
               </div>
 
@@ -462,7 +679,7 @@ export default function Admin() {
       {/* Modal confirmar eliminar */}
       {confirmEliminar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cafe-oscuro/70 backdrop-blur-sm">
-          <div className="bg-crema rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+          <div className="bg-crema rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-scale-in">
             <span className="text-4xl block mb-3">🗑️</span>
             <h3 className="font-playfair text-xl font-bold text-cafe-oscuro mb-2">
               ¿Eliminar ramo?

@@ -30,8 +30,11 @@ export default function RamoModal({ ramo, onClose }) {
       >
         {/* Foto */}
         {ramo.foto_url ? (
-          <div className="aspect-[4/3] overflow-hidden rounded-t-3xl">
+          <div className="aspect-[4/3] overflow-hidden rounded-t-3xl relative">
             <img src={ramo.foto_url} alt={ramo.nombre} className="w-full h-full object-cover" />
+            {ramo.en_promocion && (
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-900/30 to-transparent" />
+            )}
           </div>
         ) : (
           <div className="aspect-[4/3] rounded-t-3xl bg-gradient-to-br from-crema to-crema-oscura
@@ -43,12 +46,22 @@ export default function RamoModal({ ramo, onClose }) {
 
         <div className="p-7">
           <div className="flex items-start justify-between mb-4">
-            <span className="inline-block bg-verde-pistache text-cafe-oscuro text-xs font-bold px-3 py-1 rounded-full">
-              ✓ Disponible
-            </span>
+            <div className="flex gap-2 flex-wrap">
+              {ramo.en_promocion ? (
+                <span className="inline-flex items-center gap-1
+                                 bg-gradient-to-r from-amber-500 to-yellow-400
+                                 text-white text-xs font-bold px-3 py-1 rounded-full promo-glow">
+                  🏷️ OFERTA ESPECIAL
+                </span>
+              ) : (
+                <span className="inline-block bg-verde-pistache text-cafe-oscuro text-xs font-bold px-3 py-1 rounded-full">
+                  ✓ Disponible
+                </span>
+              )}
+            </div>
             <button
               onClick={onClose}
-              className="text-cafe-medio hover:text-cafe-oscuro transition-colors text-xl leading-none"
+              className="text-cafe-medio hover:text-cafe-oscuro transition-colors text-xl leading-none ml-2 flex-shrink-0"
             >
               ✕
             </button>
@@ -82,9 +95,16 @@ export default function RamoModal({ ramo, onClose }) {
           )}
 
           {ramo.precio && (
-            <div className="bg-white rounded-2xl p-4 mb-6 border border-crema-oscura">
-              <p className="font-lato text-xs text-cafe-medio uppercase tracking-widest mb-1">Precio</p>
-              <p className="font-playfair font-bold text-cafe-claro text-3xl">
+            <div className={`rounded-2xl p-4 mb-6 border
+              ${ramo.en_promocion
+                ? 'bg-amber-50 border-amber-200'
+                : 'bg-white border-crema-oscura'}`}>
+              <p className="font-lato text-xs uppercase tracking-widest mb-1
+                            text-cafe-medio">
+                {ramo.en_promocion ? '🏷️ Precio de oferta' : 'Precio'}
+              </p>
+              <p className={`font-playfair font-bold text-3xl
+                ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-claro'}`}>
                 ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                 <span className="font-lato font-light text-sm text-cafe-medio ml-1">MXN</span>
               </p>

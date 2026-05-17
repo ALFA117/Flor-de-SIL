@@ -85,16 +85,21 @@ export default async function handler(req, res) {
         foto_url = urlData.publicUrl
       }
 
+      const enPromocionRaw = Array.isArray(fields.en_promocion) ? fields.en_promocion[0] : fields.en_promocion
+      const precioNum = precio ? parseFloat(precio) : null
+      const enPromocion = enPromocionRaw === 'true' || (precioNum !== null && precioNum >= 1500)
+
       const { data, error } = await supabase
         .from('ramos')
         .insert({
           nombre,
           descripcion: descripcion || null,
           flores: floresArray,
-          precio: precio ? parseFloat(precio) : null,
+          precio: precioNum,
           foto_url,
           foto_path,
           disponible: disponible === 'true',
+          en_promocion: enPromocion,
         })
         .select()
         .single()

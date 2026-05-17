@@ -49,17 +49,19 @@ export default async function handler(req, res) {
 
       const updates = {}
 
-      const nombre     = Array.isArray(fields.nombre)     ? fields.nombre[0]     : fields.nombre
-      const descripcion= Array.isArray(fields.descripcion)? fields.descripcion[0]: fields.descripcion
-      const precio     = Array.isArray(fields.precio)     ? fields.precio[0]     : fields.precio
-      const disponible = Array.isArray(fields.disponible) ? fields.disponible[0] : fields.disponible
-      const floresRaw  = Array.isArray(fields.flores)     ? fields.flores[0]     : fields.flores
+      const nombre        = Array.isArray(fields.nombre)       ? fields.nombre[0]       : fields.nombre
+      const descripcion   = Array.isArray(fields.descripcion)  ? fields.descripcion[0]  : fields.descripcion
+      const precio        = Array.isArray(fields.precio)       ? fields.precio[0]       : fields.precio
+      const disponible    = Array.isArray(fields.disponible)   ? fields.disponible[0]   : fields.disponible
+      const en_promocion  = Array.isArray(fields.en_promocion) ? fields.en_promocion[0] : fields.en_promocion
+      const floresRaw     = Array.isArray(fields.flores)       ? fields.flores[0]       : fields.flores
 
-      if (nombre      !== undefined) updates.nombre      = nombre
-      if (descripcion !== undefined) updates.descripcion = descripcion
-      if (floresRaw   !== undefined) updates.flores      = JSON.parse(floresRaw)
-      if (precio      !== undefined) updates.precio      = precio ? parseFloat(precio) : null
-      if (disponible  !== undefined) updates.disponible  = disponible === 'true'
+      if (nombre       !== undefined) updates.nombre      = nombre
+      if (descripcion  !== undefined) updates.descripcion = descripcion
+      if (floresRaw    !== undefined) updates.flores      = JSON.parse(floresRaw)
+      if (precio       !== undefined) updates.precio      = precio ? parseFloat(precio) : null
+      if (disponible   !== undefined) updates.disponible  = disponible === 'true'
+      if (en_promocion !== undefined) updates.en_promocion = en_promocion === 'true'
 
       const fotoFile = files.foto?.[0] || files.foto
       if (fotoFile) {

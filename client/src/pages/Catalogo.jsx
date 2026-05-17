@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import supabase from '../lib/supabase'
 import RamoCard from '../components/RamoCard'
 import RamoModal from '../components/RamoModal'
@@ -13,8 +13,12 @@ export default function Catalogo() {
   const [error, setError] = useState(null)
   const [ramoSeleccionado, setRamoSeleccionado] = useState(null)
   const catalogoRef = useRef(null)
+  const cardsRef = useRef([])
 
+  // Cargar ramos + incrementar contador de visitas al montar
   useEffect(() => {
+    supabase.rpc('incrementar_visitas_pagina').catch(() => null)
+
     supabase
       .from('ramos')
       .select('*')
@@ -26,6 +30,37 @@ export default function Catalogo() {
       })
       .catch(() => setError('No pudimos cargar el catálogo. Intenta más tarde.'))
       .finally(() => setLoading(false))
+  }, [])
+
+  // IntersectionObserver: animar cards al entrar en viewport
+  useEffect(() => {
+    if (loading || ramos.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.remove('card-hidden')
+            entry.target.classList.add('card-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    )
+
+    cardsRef.current.forEach((el) => {
+      if (el) {
+        el.classList.add('card-hidden')
+        observer.observe(el)
+      }
+    })
+
+    return () => observer.disconnect()
+  }, [loading, ramos])
+
+  const setCardRef = useCallback((el, i) => {
+    cardsRef.current[i] = el
   }, [])
 
   const scrollAlCatalogo = () => {
@@ -41,21 +76,20 @@ export default function Catalogo() {
         {/* Fondo decorativo radial */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                          w-[600px] h-[600px] rounded-full opacity-10
-                          bg-radial-gradient"
+                          w-[600px] h-[600px] rounded-full opacity-10"
                style={{ background: 'radial-gradient(circle, #C4956A 0%, transparent 70%)' }} />
         </div>
 
         {/* Partículas decorativas */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(8)].map((_, i) => (
             <span key={i}
-              className="absolute text-cafe-claro/20 text-4xl animate-pulse-soft select-none"
+              className="absolute text-cafe-claro/20 select-none animate-pulse-soft"
               style={{
-                top: `${[15,70,30,80,50,20][i]}%`,
-                left: `${[8,5,85,88,15,92][i]}%`,
-                animationDelay: `${i * 0.7}s`,
-                fontSize: `${[2,1.5,2.5,1.8,1.2,2.2][i]}rem`
+                top:    `${[15,70,30,80,50,20,60,40][i]}%`,
+                left:   `${[8,5,85,88,15,92,45,75][i]}%`,
+                animationDelay: `${i * 0.6}s`,
+                fontSize: `${[2,1.5,2.5,1.8,1.2,2.2,1.6,2][i]}rem`,
               }}
             >✿</span>
           ))}
@@ -63,7 +97,7 @@ export default function Catalogo() {
 
         <div className="relative z-10 max-w-2xl flex flex-col items-center">
 
-          {/* Logo oval flotante */}
+          {/* Logo flotante */}
           <div className="animate-scale-in mb-8">
             <div className="animate-float">
               <img
@@ -128,7 +162,7 @@ export default function Catalogo() {
             <h2 className="font-playfair text-4xl md:text-5xl font-bold text-cafe-oscuro mb-4">
               Nuestros Arreglos
             </h2>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-4 mb-6">
               <div className="h-px w-24 shimmer-gold rounded-full opacity-60" />
               <span className="text-cafe-claro text-lg">✿</span>
               <div className="h-px w-24 shimmer-gold rounded-full opacity-60" />
@@ -174,8 +208,8 @@ export default function Catalogo() {
               {ramos.map((ramo, i) => (
                 <div
                   key={ramo.id}
-                  className="animate-fade-in-up"
-                  style={{ animationDelay: `${i * 0.1}s` }}
+                  ref={(el) => setCardRef(el, i)}
+                  style={{ animationDelay: `${i * 0.08}s` }}
                 >
                   <RamoCard
                     ramo={ramo}
