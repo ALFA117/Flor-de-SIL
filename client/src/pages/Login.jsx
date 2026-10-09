@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { AlertCircle, Clock, Eye, EyeOff, Loader2, Lock, User } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
@@ -38,158 +40,99 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4
-                    bg-gradient-to-br from-[#0f2418] via-verde-marino to-cafe-oscuro relative overflow-hidden">
+    <div className="flex min-h-[100dvh] items-center justify-center px-4 pb-12 pt-24">
+      <motion.div
+        className="card w-full max-w-md overflow-hidden"
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+      >
+        <div className="flex flex-col items-center gap-3 border-b border-line/60 bg-surface2/50 px-8 pb-7 pt-9 text-center">
+          <img src="/logo-160.webp" alt="" width="80" height="80" className="h-20 w-20 rounded-full ring-2 ring-accent/50" />
+          <p className="t-eyebrow">Solo personal de Flor de Sil</p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Panel de administración</h1>
+          <p className="text-sm text-muted">Aquí se suben ramos, precios y ofertas del catálogo.</p>
+        </div>
 
-      {/* Partículas de fondo */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(5)].map((_, i) => (
-          <span key={i}
-            className="absolute text-cafe-claro/10 animate-pulse-soft select-none"
-            style={{
-              top: `${[10,75,35,85,55][i]}%`,
-              left: `${[5,8,88,85,50][i]}%`,
-              fontSize: `${[3,2,3.5,2,4][i]}rem`,
-              animationDelay: `${i * 0.8}s`
-            }}
-          >✿</span>
-        ))}
-      </div>
+        <div className="p-6 sm:p-8">
+          <AnimatePresence initial={false}>
+            {expirado && (
+              <motion.p key="exp" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="mb-4 flex items-start gap-2 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm text-ink">
+                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
+                Tu sesión expiró. Ingresa de nuevo para seguir editando.
+              </motion.p>
+            )}
+          </AnimatePresence>
 
-      <div className="w-full max-w-md animate-scale-in">
-        <div className="bg-white/5 backdrop-blur-md rounded-3xl border border-white/10
-                        shadow-[0_24px_80px_rgba(0,0,0,0.5)] overflow-hidden">
-
-          {/* Header con logo */}
-          <div className="relative bg-gradient-to-b from-cafe-oscuro to-verde-marino/80 pt-10 pb-8 px-8 text-center">
-            {/* Logo oval */}
-            <div className="flex justify-center mb-5">
-              <div className="animate-float">
-                <img
-                  src="/logo.png"
-                  alt="FLOR DE SIL"
-                  className="w-28 h-28 object-cover rounded-full
-                             border-4 border-cafe-claro/60
-                             shadow-[0_0_40px_rgba(196,149,106,0.4)]"
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate={false}>
+            <div>
+              <label htmlFor="usuario" className="field-label">Usuario</label>
+              <div className="relative">
+                <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+                <input
+                  id="usuario"
+                  type="text"
+                  autoComplete="username"
+                  value={form.usuario}
+                  onChange={(e) => setForm({ ...form, usuario: e.target.value })}
+                  required
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'login-error' : undefined}
+                  className="field-input pl-11"
                 />
               </div>
             </div>
-            <h1 className="font-playfair font-bold text-2xl tracking-widest text-crema mb-1">
-              FLOR DE SIL
-            </h1>
-            <p className="font-playfair italic text-verde-pistache text-sm">
-              Donde florecen las emociones
-            </p>
-          </div>
 
-          {/* Formulario */}
-          <div className="p-8 bg-crema">
-            <h2 className="font-playfair text-lg font-semibold text-cafe-oscuro mb-6 text-center">
-              Panel de Administración
-            </h2>
-
-            {expirado && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl px-4 py-3 mb-4 text-sm font-lato animate-fade-in-down">
-                ⚠️ Tu sesión ha expirado. Ingresa de nuevo.
+            <div>
+              <label htmlFor="password" className="field-label">Contraseña</label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'login-error' : undefined}
+                  className="field-input pl-11 pr-14"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="btn-icon absolute right-1 top-1/2 -translate-y-1/2 text-muted"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                </button>
               </div>
-            )}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-4 text-sm font-lato animate-fade-in-down">
-                {error}
-              </div>
-            )}
+              <AnimatePresence initial={false}>
+                {error && (
+                  <motion.p id="login-error" role="alert" key="err"
+                    initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    className="field-error flex items-start gap-1.5">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                    {error}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Usuario */}
-              <div>
-                <label className="block font-lato font-bold text-xs tracking-widest text-cafe-oscuro uppercase mb-2">
-                  Usuario
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-cafe-claro">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    value={form.usuario}
-                    onChange={(e) => setForm({ ...form, usuario: e.target.value })}
-                    required
-                    className="w-full pl-11 pr-4 py-3 border border-crema-oscura rounded-xl
-                               font-lato text-sm bg-crema focus:outline-none
-                               focus:ring-2 focus:ring-cafe-claro focus:border-transparent
-                               transition-all duration-300"
-                    placeholder="Tu usuario"
-                  />
-                </div>
-              </div>
-
-              {/* Contraseña */}
-              <div>
-                <label className="block font-lato font-bold text-xs tracking-widest text-cafe-oscuro uppercase mb-2">
-                  Contraseña
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-cafe-claro">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </span>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    required
-                    className="w-full pl-11 pr-12 py-3 border border-crema-oscura rounded-xl
-                               font-lato text-sm bg-crema focus:outline-none
-                               focus:ring-2 focus:ring-cafe-claro focus:border-transparent
-                               transition-all duration-300"
-                    placeholder="Tu contraseña"
-                  />
-                  <button type="button" onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-cafe-claro
-                               hover:text-cafe-medio transition-colors">
-                    {showPassword ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-verde-bosque hover:bg-verde-marino text-white font-lato font-bold
-                           py-3.5 rounded-xl transition-all duration-300 mt-2
-                           shadow-lg hover:shadow-xl hover:-translate-y-0.5
-                           disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                    </svg>
-                    Ingresando...
-                  </span>
-                ) : 'Ingresar'}
-              </button>
-            </form>
-          </div>
+            <motion.button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full"
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            >
+              {loading ? (<><Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Ingresando…</>) : 'Ingresar'}
+            </motion.button>
+          </form>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

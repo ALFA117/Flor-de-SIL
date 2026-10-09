@@ -282,7 +282,7 @@ export default function Admin() {
     : null
 
   return (
-    <div className="min-h-screen bg-crema">
+    <div className="force-light min-h-screen bg-crema text-ink">
       {/* Header */}
       <header className="bg-gradient-to-r from-cafe-oscuro to-verde-marino text-crema px-6 py-4
                          flex items-center justify-between shadow-lg sticky top-0 z-40">
