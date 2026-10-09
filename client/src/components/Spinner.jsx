@@ -6,10 +6,8 @@ export default function Spinner({ size = 'md' }) {
   }
 
   return (
-    <div className="flex justify-center items-center py-8">
-      <div
-        className={`${sizes[size]} rounded-full border-crema-oscura border-t-cafe-claro animate-spin`}
-      />
+    <div className="flex justify-center items-center py-8" role="status" aria-label="Cargando">
+      <div className={`${sizes[size]} rounded-full border-line border-t-accent animate-spin`} />
     </div>
   )
 }
