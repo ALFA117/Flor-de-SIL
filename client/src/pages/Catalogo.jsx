@@ -14,21 +14,28 @@ export default function Catalogo() {
   const [ramoSeleccionado, setRamoSeleccionado] = useState(null)
   const catalogoRef = useRef(null)
 
-  // Cargar ramos + incrementar contador de visitas al montar
-  useEffect(() => {
-    supabase.rpc('incrementar_visitas_pagina').then(() => null, () => null)
-
+  // Cargar ramos; si el servidor no contesta en 8 s se muestra el aviso con WhatsApp
+  const cargarRamos = () => {
+    setLoading(true)
+    setError(null)
     supabase
       .from('ramos')
       .select('*')
       .eq('disponible', true)
       .order('creado_en', { ascending: false })
+      .abortSignal(AbortSignal.timeout(8000))
       .then(({ data, error }) => {
         if (error) throw error
         setRamos(data || [])
       })
-      .catch(() => setError('No pudimos cargar el catálogo. Intenta más tarde.'))
+      .catch(() => setError('No pudimos cargar el catálogo en este momento.'))
       .finally(() => setLoading(false))
+  }
+
+  // Cargar ramos + incrementar contador de visitas al montar
+  useEffect(() => {
+    supabase.rpc('incrementar_visitas_pagina').then(() => null, () => null)
+    cargarRamos()
   }, [])
 
   const scrollAlCatalogo = () => {
@@ -139,21 +146,17 @@ export default function Catalogo() {
 
           {loading && <Spinner size="lg" />}
 
-          {error && (
-            <div className="text-center py-16">
-              <p className="font-lato text-cafe-medio">{error}</p>
-            </div>
-          )}
-
-          {!loading && !error && ramos.length === 0 && (
-            <div className="text-center py-20 max-w-md mx-auto animate-fade-in-up">
+          {!loading && (error || ramos.length === 0) && (
+            <div className="text-center py-20 max-w-md mx-auto animate-fade-in-up" role={error ? 'alert' : undefined}>
               <img src="/logo.png" alt="FLOR DE SIL"
                 className="w-32 h-32 object-cover rounded-full mx-auto mb-6 opacity-40" />
               <p className="font-playfair text-xl text-cafe-oscuro mb-2">
-                Por el momento no contamos con disponibilidad.
+                {error || 'Por el momento no contamos con disponibilidad.'}
               </p>
               <p className="font-lato font-light text-cafe-medio mb-8">
-                Escríbenos directamente y con gusto te ayudamos →
+                {error
+                  ? 'Escríbenos por WhatsApp y te compartimos los arreglos disponibles →'
+                  : 'Escríbenos directamente y con gusto te ayudamos →'}
               </p>
               <a
                 href={WA_DIRECT}
@@ -168,6 +171,16 @@ export default function Catalogo() {
                 </svg>
                 Contactar por WhatsApp
               </a>
+              {error && (
+                <button
+                  type="button"
+                  onClick={cargarRamos}
+                  className="block mx-auto mt-5 font-lato text-sm text-cafe-medio underline underline-offset-4
+                             hover:text-cafe-oscuro transition-colors min-h-[44px] px-4"
+                >
+                  Reintentar
+                </button>
+              )}
             </div>
           )}
 
