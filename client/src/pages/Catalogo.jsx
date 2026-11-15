@@ -1,21 +1,49 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import supabase from '../lib/supabase'
-import RamoCard from '../components/RamoCard'
+import RamoCard, { RamoCardSkeleton } from '../components/RamoCard'
 import RamoModal from '../components/RamoModal'
-import Spinner from '../components/Spinner'
+import Icon from '../components/Icon'
+import { WA_DIRECT, WA_DISPLAY } from '../lib/tienda'
 
-const WA_NUMBER = '5215652539705'
-const WA_DIRECT = `https://wa.me/${WA_NUMBER}`
+const pasos = [
+  { n: '01', t: 'Elige un arreglo', d: 'Revisa el catálogo y abre cualquier ramo para ver sus flores y su precio.' },
+  { n: '02', t: 'Escríbenos por WhatsApp', d: 'El botón de cada arreglo abre el chat con el nombre del ramo ya escrito.' },
+  { n: '03', t: 'Confirmamos tu pedido', d: 'Te respondemos con la disponibilidad y acordamos los detalles contigo.' },
+]
+
+function Ramita({ className = '' }) {
+  // Trazo botánico fino, decorativo
+  return (
+    <svg viewBox="0 0 120 220" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true" className={className}>
+      <path d="M60 218C58 170 62 120 60 70 59 45 61 22 60 2" />
+      <path d="M60 170c-14-6-26-18-30-34 14 2 26 14 30 34zM60 140c14-6 26-18 30-34-14 2-26 14-30 34zM60 108c-12-5-22-15-25-29 12 2 22 12 25 29zM60 80c12-5 22-15 25-29-12 2-22 12-25 29zM60 52c-9-4-16-11-18-21 9 2 16 9 18 21z" />
+      <circle cx="60" cy="10" r="6" />
+    </svg>
+  )
+}
+
+function EstadoCatalogo({ loading, error, total }) {
+  let color = 'bg-linea-fuerte'
+  let texto = 'Cargando catálogo…'
+  if (!loading && error) { color = 'bg-barro'; texto = 'Catálogo en línea fuera de servicio' }
+  else if (!loading && total === 0) { color = 'bg-linea-fuerte'; texto = 'Sin arreglos publicados por ahora' }
+  else if (!loading) { color = 'bg-bosque'; texto = `${total} ${total === 1 ? 'arreglo disponible' : 'arreglos disponibles'}` }
+  return (
+    <p className="inline-flex items-center gap-2 text-[14px] text-tinta-suave" role="status" aria-live="polite">
+      <span className={`h-2 w-2 rounded-full ${color} ${loading ? 'animate-pulse' : ''}`} />
+      {texto}
+    </p>
+  )
+}
 
 export default function Catalogo() {
   const [ramos, setRamos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [ramoSeleccionado, setRamoSeleccionado] = useState(null)
-  const catalogoRef = useRef(null)
 
-  // Cargar ramos; si el servidor no contesta en 8 s se muestra el aviso con WhatsApp
-  const cargarRamos = () => {
+  // Si el servidor no contesta en 8 s se muestra el aviso con WhatsApp
+  const cargarRamos = useCallback(() => {
     setLoading(true)
     setError(null)
     supabase
@@ -30,222 +58,216 @@ export default function Catalogo() {
       })
       .catch(() => setError('No pudimos cargar el catálogo en este momento.'))
       .finally(() => setLoading(false))
-  }
+  }, [])
 
-  // Cargar ramos + incrementar contador de visitas al montar
   useEffect(() => {
     supabase.rpc('incrementar_visitas_pagina').then(() => null, () => null)
     cargarRamos()
-  }, [])
+  }, [cargarRamos])
 
-  const scrollAlCatalogo = () => {
-    catalogoRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const cerrarModal = useCallback(() => setRamoSeleccionado(null), [])
+  const anio = new Date().getFullYear()
 
   return (
-    <>
-      {/* HERO */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6
-                          bg-gradient-to-b from-[#0f2418] via-verde-marino to-cafe-oscuro overflow-hidden pt-20">
+    <main id="contenido">
+      {/* ── HERO ── */}
+      <section className="contenedor pt-8 pb-16 md:pt-14 md:pb-24">
+        <div className="grid items-stretch gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+          <div className="flex flex-col justify-center animate-rise">
+            <p className="eyebrow">Florería · Pedidos por WhatsApp</p>
+            <h1 className="mt-5 font-display text-[44px] leading-[1.02] sm:text-[60px] lg:text-[76px] font-semibold tracking-[-0.01em] text-tinta">
+              Donde florecen <span className="italic font-medium text-bosque">las emociones.</span>
+            </h1>
+            <p className="mt-6 max-w-[52ch] text-[17px] sm:text-[18px] leading-relaxed text-tinta-suave">
+              Ramos y arreglos florales con precio en pesos. Elige el tuyo en el catálogo y apártalo
+              con un mensaje: te confirmamos disponibilidad y detalles por WhatsApp.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <a href="#catalogo" className="btn-primario">
+                Ver catálogo
+                <Icon name="arrowDown" size={17} />
+              </a>
+              <a href={WA_DIRECT} target="_blank" rel="noopener noreferrer" className="btn-secundario">
+                <Icon name="whatsapp" size={17} />
+                Escribir por WhatsApp
+              </a>
+            </div>
+            <dl className="mt-10 grid max-w-md grid-cols-2 border-t border-linea pt-5 text-[14px]">
+              <div>
+                <dt className="text-tinta-tenue">Pedidos</dt>
+                <dd className="mt-1 font-medium text-tinta">Por WhatsApp</dd>
+              </div>
+              <div>
+                <dt className="text-tinta-tenue">Teléfono</dt>
+                <dd className="mt-1 precio text-tinta">{WA_DISPLAY}</dd>
+              </div>
+            </dl>
+          </div>
 
-        {/* Fondo decorativo radial */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                          w-[600px] h-[600px] rounded-full opacity-10"
-               style={{ background: 'radial-gradient(circle, #C4956A 0%, transparent 70%)' }} />
-        </div>
-
-        {/* Partículas decorativas */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(8)].map((_, i) => (
-            <span key={i}
-              className="absolute text-cafe-claro/20 select-none animate-pulse-soft"
-              style={{
-                top:    `${[15,70,30,80,50,20,60,40][i]}%`,
-                left:   `${[8,5,85,88,15,92,45,75][i]}%`,
-                animationDelay: `${i * 0.6}s`,
-                fontSize: `${[2,1.5,2.5,1.8,1.2,2.2,1.6,2][i]}rem`,
-              }}
-            >✿</span>
-          ))}
-        </div>
-
-        <div className="relative z-10 max-w-2xl flex flex-col items-center">
-
-          {/* Logo flotante */}
-          <div className="animate-scale-in mb-8">
-            <div className="animate-float">
-              <img
-                src="/logo.png"
-                alt="FLOR DE SIL"
-                className="w-52 h-52 object-cover rounded-full shadow-[0_0_60px_rgba(196,149,106,0.4)]
-                           border-4 border-cafe-claro/70"
-              />
+          <div className="relative min-h-[360px] sm:min-h-[440px] overflow-hidden rounded bg-bosque-noche text-papel animate-fade-in">
+            <div className="absolute inset-3 sm:inset-4 rounded-sm border border-papel/15" />
+            <Ramita className="absolute -left-4 bottom-0 h-[70%] text-papel/15" />
+            <Ramita className="absolute -right-6 top-0 h-[55%] rotate-180 text-papel/10" />
+            <div className="relative flex h-full flex-col items-center justify-center px-8 py-12 text-center">
+              <picture>
+                <source srcSet="/logo-320.webp 1x, /logo-640.webp 2x" type="image/webp" />
+                <img
+                  src="/logo.png"
+                  alt="Logotipo de Flor de Sil"
+                  width="240"
+                  height="240"
+                  className="h-[200px] w-[200px] sm:h-[240px] sm:w-[240px] rounded-full object-cover ring-1 ring-papel/25"
+                />
+              </picture>
+              <p className="mt-8 font-display text-[22px] italic text-papel/90">Ramos y arreglos florales</p>
+              <p className="mt-2 text-[13px] uppercase tracking-[0.18em] text-papel/60">Flor de Sil</p>
             </div>
           </div>
-
-          <p className="animate-fade-in-up delay-200 font-lato text-xs tracking-[0.5em] text-verde-pistache/80 uppercase mb-3">
-            Bienvenido a
-          </p>
-
-          <h1 className="animate-fade-in-up delay-300 font-playfair font-bold text-5xl md:text-7xl text-crema
-                         tracking-[0.12em] mb-3 leading-tight">
-            FLOR DE SIL
-          </h1>
-
-          {/* Separador shimmer */}
-          <div className="animate-fade-in delay-400 flex items-center justify-center gap-4 mb-4 w-full max-w-xs">
-            <div className="h-px flex-1 shimmer-gold rounded-full opacity-70" />
-            <span className="text-cafe-claro text-xl">✿</span>
-            <div className="h-px flex-1 shimmer-gold rounded-full opacity-70" />
-          </div>
-
-          <p className="animate-fade-in-up delay-500 font-playfair italic text-xl text-verde-pistache mb-10">
-            Donde florecen las emociones
-          </p>
-
-          <button
-            onClick={scrollAlCatalogo}
-            className="animate-fade-in-up delay-600
-                       group relative overflow-hidden bg-transparent border-2 border-cafe-claro/70
-                       hover:border-cafe-claro text-crema font-lato font-bold
-                       px-10 py-3.5 rounded-full transition-all duration-500
-                       hover:shadow-[0_0_30px_rgba(196,149,106,0.4)]"
-          >
-            <span className="absolute inset-0 bg-cafe-claro/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 rounded-full" />
-            <span className="relative">Ver Catálogo ↓</span>
-          </button>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce opacity-50">
-          <svg className="w-5 h-5 text-crema" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
         </div>
       </section>
 
-      {/* CATÁLOGO */}
-      <section ref={catalogoRef} className="bg-crema py-20 px-4 min-h-[60vh]">
-        <div className="max-w-6xl mx-auto">
-
-          {/* Encabezado sección */}
-          <div className="text-center mb-14">
-            <p className="font-lato text-xs tracking-[0.4em] text-cafe-claro uppercase mb-3">
-              Colección
-            </p>
-            <h2 className="font-playfair text-4xl md:text-5xl font-bold text-cafe-oscuro mb-4">
-              Nuestros Arreglos
-            </h2>
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="h-px w-24 shimmer-gold rounded-full opacity-60" />
-              <span className="text-cafe-claro text-lg">✿</span>
-              <div className="h-px w-24 shimmer-gold rounded-full opacity-60" />
+      {/* ── CÓMO PEDIR ── */}
+      <section id="como-pedir" className="scroll-mt-20 border-y border-linea bg-papel-hondo/60">
+        <div className="contenedor py-14 md:py-16">
+          <div className="grid gap-10 md:grid-cols-[0.8fr_2fr] md:gap-16">
+            <div>
+              <p className="eyebrow">Cómo pedir</p>
+              <h2 className="mt-3 font-display text-[34px] md:text-[40px] font-semibold leading-[1.05]">
+                Tres pasos, un mensaje.
+              </h2>
             </div>
+            <ol className="grid gap-8 sm:grid-cols-3 sm:gap-0">
+              {pasos.map((p, i) => (
+                <li
+                  key={p.n}
+                  className={`sm:px-6 ${i > 0 ? 'sm:border-l sm:border-linea-fuerte' : 'sm:pl-0'} ${i === 0 ? '' : 'border-t border-linea pt-8 sm:border-t-0 sm:pt-0'}`}
+                >
+                  <span className="font-mono text-[13px] text-barro">{p.n}</span>
+                  <h3 className="mt-3 text-[18px] font-semibold text-tinta">{p.t}</h3>
+                  <p className="mt-2 text-[15px] leading-relaxed text-tinta-suave">{p.d}</p>
+                </li>
+              ))}
+            </ol>
           </div>
+        </div>
+      </section>
 
-          {loading && <Spinner size="lg" />}
+      {/* ── CATÁLOGO ── */}
+      <section id="catalogo" className="scroll-mt-20 contenedor py-16 md:py-24">
+        <div className="flex flex-col gap-4 border-b border-linea pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow">Colección</p>
+            <h2 className="mt-3 font-display text-[40px] md:text-[52px] font-semibold leading-none">Nuestros arreglos</h2>
+          </div>
+          <EstadoCatalogo loading={loading} error={error} total={ramos.length} />
+        </div>
 
-          {!loading && (error || ramos.length === 0) && (
-            <div className="text-center py-20 max-w-md mx-auto animate-fade-in-up" role={error ? 'alert' : undefined}>
-              <img src="/logo.png" alt="FLOR DE SIL"
-                className="w-32 h-32 object-cover rounded-full mx-auto mb-6 opacity-40" />
-              <p className="font-playfair text-xl text-cafe-oscuro mb-2">
-                {error || 'Por el momento no contamos con disponibilidad.'}
-              </p>
-              <p className="font-lato font-light text-cafe-medio mb-8">
+        {loading && (
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-label="Cargando catálogo">
+            {[0, 1, 2].map((i) => <RamoCardSkeleton key={i} />)}
+          </div>
+        )}
+
+        {!loading && (error || ramos.length === 0) && (
+          <div
+            className="mt-10 grid gap-8 rounded border border-linea bg-papel-claro p-6 sm:p-10 md:grid-cols-[auto_1fr_auto] md:items-center animate-rise"
+            role={error ? 'alert' : undefined}
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-linea-fuerte text-barro">
+              <Icon name={error ? 'cloudOff' : 'flower'} size={26} strokeWidth={1.5} />
+            </div>
+            <div className="max-w-[56ch]">
+              <h3 className="font-display text-[28px] font-semibold leading-tight text-tinta">
+                {error ? 'El catálogo en línea no está disponible por ahora.' : 'Por el momento no hay arreglos publicados.'}
+              </h3>
+              <p className="mt-3 text-[16px] leading-relaxed text-tinta-suave">
                 {error
-                  ? 'Escríbenos por WhatsApp y te compartimos los arreglos disponibles →'
-                  : 'Escríbenos directamente y con gusto te ayudamos →'}
+                  ? 'Seguimos atendiendo: escríbenos por WhatsApp y te compartimos los arreglos disponibles.'
+                  : 'Escríbenos directamente y con gusto te ayudamos a elegir.'}
               </p>
-              <a
-                href={WA_DIRECT}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-verde-bosque hover:bg-verde-marino text-white
-                           font-lato font-bold px-8 py-3 rounded-full transition-all duration-300
-                           shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+              <a href={WA_DIRECT} target="_blank" rel="noopener noreferrer" className="btn-primario">
+                <Icon name="whatsapp" size={18} />
                 Contactar por WhatsApp
               </a>
               {error && (
-                <button
-                  type="button"
-                  onClick={cargarRamos}
-                  className="block mx-auto mt-5 font-lato text-sm text-cafe-medio underline underline-offset-4
-                             hover:text-cafe-oscuro transition-colors min-h-[44px] px-4"
-                >
+                <button type="button" onClick={cargarRamos} className="btn-secundario">
+                  <Icon name="refresh" size={17} />
                   Reintentar
                 </button>
               )}
             </div>
-          )}
+          </div>
+        )}
 
-          {!loading && !error && ramos.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
-              {ramos.map((ramo, i) => (
-                <div
-                  key={ramo.id}
-                  className="animate-fade-in-up"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                >
-                  <RamoCard
-                    ramo={ramo}
-                    onClick={() => setRamoSeleccionado(ramo)}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+        {!loading && !error && ramos.length > 0 && (
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {ramos.map((ramo, i) => (
+              <RamoCard key={ramo.id} ramo={ramo} index={i} onOpen={() => setRamoSeleccionado(ramo)} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── CONTACTO ── */}
+      <section id="contacto" className="scroll-mt-20 contenedor pb-16 md:pb-24">
+        <div className="grid gap-8 rounded bg-bosque px-6 py-10 text-papel sm:px-10 md:grid-cols-[1.4fr_1fr] md:items-center md:py-14">
+          <div>
+            <h2 className="font-display text-[32px] md:text-[40px] font-semibold leading-[1.08]">
+              ¿No encuentras lo que buscas?
+            </h2>
+            <p className="mt-3 max-w-[48ch] text-[16px] leading-relaxed text-papel/80">
+              Escríbenos por WhatsApp y con gusto te ayudamos a elegir el arreglo indicado.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 md:items-end">
+            <a href={WA_DIRECT} target="_blank" rel="noopener noreferrer" className="btn-claro w-full md:w-auto">
+              <Icon name="whatsapp" size={18} />
+              Escribir por WhatsApp
+            </a>
+            <span className="precio text-[15px] text-papel/80">{WA_DISPLAY}</span>
+          </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-cafe-oscuro text-crema py-14 px-4">
-        <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
-          <img src="/logo.png" alt="FLOR DE SIL"
-            className="w-20 h-20 object-cover rounded-full mb-5 border-2 border-cafe-claro/40 opacity-90" />
-
-          <p className="font-playfair text-xl font-semibold mb-1">FLOR DE SIL</p>
-          <p className="font-playfair italic text-verde-pistache text-sm mb-6">
-            Donde florecen las emociones
-          </p>
-
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-px w-16 bg-cafe-claro/30" />
-            <span className="text-cafe-claro/50 text-sm">✿</span>
-            <div className="h-px w-16 bg-cafe-claro/30" />
+      {/* ── PIE ── */}
+      <footer className="border-t border-linea">
+        <div className="contenedor grid gap-10 py-12 md:grid-cols-[1.5fr_1fr_1fr]">
+          <div>
+            <div className="flex items-center gap-3">
+              <img src="/logo-160.webp" alt="" width="44" height="44" className="h-11 w-11 rounded-full object-cover ring-1 ring-linea-fuerte" />
+              <span className="font-display text-[24px] font-semibold">Flor de Sil</span>
+            </div>
+            <p className="mt-3 font-display text-[18px] italic text-tinta-suave">Donde florecen las emociones</p>
           </div>
-
-          <a
-            href={WA_DIRECT}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-crema hover:text-cafe-claro
-                       transition-colors font-lato text-sm group"
-          >
-            <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            56 5253 9705
-          </a>
-
-          <p className="font-lato font-light text-xs text-cafe-claro/50 mt-6">
-            © 2024 FLOR DE SIL. Todos los derechos reservados.
-          </p>
+          <div>
+            <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-tinta-tenue">Contacto</p>
+            <a
+              href={WA_DIRECT}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex min-h-[44px] items-center gap-2 text-[15px] text-tinta hover:text-bosque"
+            >
+              <Icon name="whatsapp" size={16} />
+              <span className="precio">{WA_DISPLAY}</span>
+            </a>
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-tinta-tenue">Sitio</p>
+            <ul className="mt-3 space-y-1 text-[15px]">
+              <li><a href="#catalogo" className="inline-flex min-h-[40px] items-center text-tinta hover:text-bosque">Catálogo</a></li>
+              <li><a href="#como-pedir" className="inline-flex min-h-[40px] items-center text-tinta hover:text-bosque">Cómo pedir</a></li>
+              <li><a href="/admin" className="inline-flex min-h-[40px] items-center gap-1.5 text-tinta-suave hover:text-tinta"><Icon name="lock" size={14} />Acceso administración</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="contenedor border-t border-linea py-6 text-[13px] text-tinta-tenue">
+          © {anio} Flor de Sil. Todos los derechos reservados.
         </div>
       </footer>
 
-      {/* Modal */}
-      {ramoSeleccionado && (
-        <RamoModal
-          ramo={ramoSeleccionado}
-          onClose={() => setRamoSeleccionado(null)}
-        />
-      )}
-    </>
+      {ramoSeleccionado && <RamoModal ramo={ramoSeleccionado} onClose={cerrarModal} />}
+    </main>
   )
 }

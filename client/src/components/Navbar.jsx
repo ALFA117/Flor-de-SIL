@@ -1,107 +1,113 @@
 import { useState, useEffect } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import Icon from './Icon'
+import { WA_DIRECT } from '../lib/tienda'
+
+const enlaces = [
+  { href: '/#catalogo', label: 'Catálogo' },
+  { href: '/#como-pedir', label: 'Cómo pedir' },
+  { href: '/#contacto', label: 'Contacto' },
+]
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll)
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e) => e.key === 'Escape' && setMenuOpen(false)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [menuOpen])
+
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500
-        ${scrolled
-          ? 'bg-cafe-oscuro/95 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.3)]'
-          : 'bg-cafe-oscuro'
-        }`}
+    <header
+      className={`sticky top-0 z-40 bg-papel/95 supports-[backdrop-filter]:bg-papel/90 border-b transition-colors duration-200
+        ${scrolled ? 'border-linea' : 'border-transparent'}`}
     >
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 group">
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:bg-tinta focus:text-papel focus:px-4 focus:py-2 focus:rounded"
+      >
+        Saltar al contenido
+      </a>
+      <nav className="contenedor flex h-16 md:h-[72px] items-center justify-between gap-4" aria-label="Principal">
+        <Link to="/" className="flex items-center gap-3 min-h-[44px]" aria-label="Flor de Sil, inicio">
           <img
-            src="/logo.png"
-            alt="FLOR DE SIL"
-            className="w-11 h-11 object-cover rounded-full border-2 border-cafe-claro/60
-                       group-hover:border-cafe-claro group-hover:scale-105
-                       transition-all duration-300 shadow-lg"
+            src="/logo-160.webp"
+            alt=""
+            width="40"
+            height="40"
+            className="w-10 h-10 rounded-full object-cover ring-1 ring-linea-fuerte"
           />
-          <div className="flex flex-col leading-tight">
-            <span className="font-playfair font-bold text-lg tracking-widest text-crema">
-              FLOR DE SIL
-            </span>
-            <span className="font-playfair italic text-[11px] text-verde-pistache">
-              Donde florecen las emociones
-            </span>
-          </div>
+          <span className="font-display text-[22px] font-semibold leading-none tracking-[0.01em] text-tinta">
+            Flor de Sil
+          </span>
         </Link>
 
-        {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8 font-lato text-sm tracking-wider">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              `relative pb-0.5 transition-colors duration-300 after:absolute after:bottom-0 after:left-0
-               after:h-px after:bg-cafe-claro after:transition-all after:duration-300
-               ${isActive
-                 ? 'text-cafe-claro after:w-full'
-                 : 'text-crema hover:text-cafe-claro after:w-0 hover:after:w-full'
-               }`
-            }
-          >
-            Catálogo
-          </NavLink>
-          <NavLink
-            to="/admin"
-            className={({ isActive }) =>
-              `relative pb-0.5 transition-colors duration-300 after:absolute after:bottom-0 after:left-0
-               after:h-px after:bg-cafe-claro after:transition-all after:duration-300
-               ${isActive
-                 ? 'text-cafe-claro after:w-full'
-                 : 'text-crema hover:text-cafe-claro after:w-0 hover:after:w-full'
-               }`
-            }
-          >
-            Acceso Admin
-          </NavLink>
+        <div className="hidden md:flex items-center gap-8">
+          <ul className="flex items-center gap-7">
+            {enlaces.map((e) => (
+              <li key={e.href}>
+                <a
+                  href={e.href}
+                  className="text-[15px] font-medium text-tinta-suave hover:text-tinta transition-colors py-2"
+                >
+                  {e.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a href={WA_DIRECT} target="_blank" rel="noopener noreferrer" className="btn-primario !min-h-[42px] !px-4 !text-[14px]">
+            <Icon name="whatsapp" size={16} />
+            Escríbenos
+          </a>
         </div>
 
-        {/* Hamburger */}
         <button
-          className="md:hidden text-crema focus:outline-none"
+          type="button"
+          className="md:hidden -mr-2 inline-flex h-11 w-11 items-center justify-center rounded text-tinta hover:bg-papel-hondo"
           onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Menú"
+          aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={menuOpen}
+          aria-controls="menu-movil"
         >
-          <div className="flex flex-col gap-1.5 w-6">
-            <span className={`block h-0.5 bg-crema rounded transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-            <span className={`block h-0.5 bg-crema rounded transition-all duration-300 ${menuOpen ? 'opacity-0' : ''}`} />
-            <span className={`block h-0.5 bg-crema rounded transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-          </div>
+          <Icon name={menuOpen ? 'close' : 'menu'} size={22} />
         </button>
-      </div>
+      </nav>
 
-      {/* Mobile menu */}
-      <div className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-40' : 'max-h-0'}`}>
-        <div className="bg-cafe-medio/95 backdrop-blur-md px-4 pb-4 pt-2 flex flex-col gap-1">
-          <NavLink
-            to="/"
-            onClick={() => setMenuOpen(false)}
-            className="text-crema hover:text-cafe-claro font-lato py-2.5 border-b border-cafe-oscuro/40 transition-colors"
-          >
-            Catálogo
-          </NavLink>
-          <NavLink
-            to="/admin"
-            onClick={() => setMenuOpen(false)}
-            className="text-crema hover:text-cafe-claro font-lato py-2.5 transition-colors"
-          >
-            Acceso Admin
-          </NavLink>
-        </div>
+      <div
+        id="menu-movil"
+        className={`md:hidden border-t border-linea bg-papel ${menuOpen ? 'block animate-fade-in' : 'hidden'}`}
+      >
+        <ul className="contenedor py-2">
+          {enlaces.map((e) => (
+            <li key={e.href}>
+              <a
+                href={e.href}
+                onClick={() => setMenuOpen(false)}
+                className="flex min-h-[48px] items-center justify-between border-b border-linea text-[16px] font-medium text-tinta"
+              >
+                {e.label}
+                <Icon name="arrowRight" size={16} className="text-tinta-tenue" />
+              </a>
+            </li>
+          ))}
+          <li className="py-4">
+            <a href={WA_DIRECT} target="_blank" rel="noopener noreferrer" className="btn-primario w-full">
+              <Icon name="whatsapp" size={18} />
+              Escríbenos por WhatsApp
+            </a>
+          </li>
+        </ul>
       </div>
-    </nav>
+    </header>
   )
 }
