@@ -1,19 +1,52 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="FLOR DE SIL — Donde florecen las emociones. Catálogo de arreglos florales." />
-    <title>FLOR DE SIL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Flor de Sil — Ramos y arreglos florales | Pide por WhatsApp</title>
+    <meta name="description" content="Florería Flor de Sil: catálogo de ramos y arreglos florales con precio en MXN. Elige el tuyo y apártalo por WhatsApp." />
+    <link rel="canonical" href="https://flor-de-sil.vercel.app/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:site_name" content="Flor de Sil" />
+    <meta property="og:title" content="Flor de Sil — Donde florecen las emociones" />
+    <meta property="og:description" content="Ramos y arreglos florales con precio en MXN. Elige el tuyo y pídelo por WhatsApp." />
+    <meta property="og:url" content="https://flor-de-sil.vercel.app/" />
+    <meta property="og:image" content="https://flor-de-sil.vercel.app/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Logotipo de Flor de Sil con el lema Donde florecen las emociones" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Flor de Sil — Donde florecen las emociones" />
+    <meta name="twitter:description" content="Ramos y arreglos florales con precio en MXN. Pídelo por WhatsApp." />
+    <meta name="twitter:image" content="https://flor-de-sil.vercel.app/og.jpg" />
+
+    <meta name="theme-color" content="#0E1A14" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F5ECD7" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preload" as="image" href="/logo-320.webp" type="image/webp" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lato:wght@300;400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Aplica el tema guardado antes del primer pintado (evita parpadeo)
+      try {
+        var t = localStorage.getItem('flordesil_tema')
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
   </head>
   <body>
+    <noscript>
+      <p style="padding:24px;font-family:sans-serif">Flor de Sil necesita JavaScript para mostrar el catálogo. También puedes escribirnos por WhatsApp al 56 5253 9705: https://wa.me/5215652539705</p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
