@@ -32,13 +32,13 @@ export default function FloresInput({ flores, onChange }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ej: Rosas rojas"
-          className="flex-1 border border-crema-oscura rounded-lg px-3 py-2 text-sm font-lato
+          className="flex-1 border border-crema-oscura rounded px-3 min-h-[44px] text-[16px] font-lato
                      bg-crema focus:outline-none focus:ring-2 focus:ring-cafe-claro"
         />
         <button
           type="button"
           onClick={addFlor}
-          className="bg-cafe-medio hover:bg-cafe-oscuro text-crema font-bold px-4 py-2
+          className="bg-cafe-medio hover:bg-cafe-oscuro text-crema font-bold px-4 min-h-[44px] min-w-[44px]
                      rounded-lg transition-colors duration-200 text-sm"
         >
           +
@@ -51,9 +51,9 @@ export default function FloresInput({ flores, onChange }) {
             <span
               key={flor}
               className="inline-flex items-center gap-1 bg-crema-oscura text-cafe-oscuro
-                         text-sm font-lato px-3 py-1.5 rounded-full"
+                         text-sm font-lato px-3 py-1.5 rounded-sm"
             >
-              🌸 {flor}
+              {flor}
               <button
                 type="button"
                 onClick={() => removeFlor(flor)}

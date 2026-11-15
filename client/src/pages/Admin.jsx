@@ -5,6 +5,7 @@ import supabase from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import FloresInput from '../components/FloresInput'
 import Spinner from '../components/Spinner'
+import Icon from '../components/Icon'
 
 const FORM_INICIAL = {
   nombre: '',
@@ -282,39 +283,35 @@ export default function Admin() {
     : null
 
   return (
-    <div className="min-h-screen bg-crema">
+    <div className="min-h-screen bg-papel">
       {/* Header */}
-      <header className="bg-gradient-to-r from-cafe-oscuro to-verde-marino text-crema px-6 py-4
-                         flex items-center justify-between shadow-lg sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="FLOR DE SIL"
-            className="w-10 h-10 object-cover rounded-full border-2 border-cafe-claro/50" />
-          <div>
-            <h1 className="font-playfair text-base font-bold tracking-wide">Panel de Administración</h1>
-            <p className="font-lato text-xs text-verde-pistache">FLOR DE SIL</p>
+      <header className="sticky top-0 z-40 bg-papel/95 border-b border-linea">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src="/logo-160.webp" alt="" width="40" height="40"
+              className="w-10 h-10 object-cover rounded-full ring-1 ring-linea-fuerte" />
+            <div className="min-w-0">
+              <h1 className="font-display text-[20px] font-semibold leading-none text-tinta truncate">Flor de Sil</h1>
+              <p className="text-[13px] text-tinta-tenue mt-1">Panel de administración</p>
+            </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="btn-secundario !min-h-[44px] !px-4 !text-[14px]"
+          >
+            <Icon name="logout" size={16} />
+            <span className="hidden sm:inline">Cerrar sesión</span>
+            <span className="sm:hidden">Salir</span>
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          className="font-lato text-sm border border-crema/30 hover:border-crema/70
-                     hover:bg-white/10 text-crema px-4 py-2 rounded-xl
-                     transition-all duration-200 flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Cerrar sesión
-        </button>
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
 
         {/* ── Widget visitas ── */}
         {visitas !== null && (
-          <div className="mb-6 bg-gradient-to-r from-verde-marino to-cafe-oscuro
-                          rounded-2xl p-5 flex items-center gap-5 shadow-lg animate-fade-in-down">
-            <div className="w-12 h-12 rounded-full bg-cafe-claro/20 flex items-center justify-center flex-shrink-0">
+          <div className="mb-6 bg-papel-claro border border-linea rounded p-5 flex items-center gap-5 animate-fade-in-down">
+            <div className="w-12 h-12 rounded-full border border-linea-fuerte flex items-center justify-center flex-shrink-0">
               <svg className="w-6 h-6 text-cafe-claro" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -323,18 +320,18 @@ export default function Admin() {
               </svg>
             </div>
             <div>
-              <p className="font-lato text-xs text-verde-pistache uppercase tracking-widest mb-0.5">
+              <p className="font-lato text-[13px] text-tinta-tenue mb-0.5">
                 Visitas totales a la página
               </p>
-              <p className="font-playfair font-bold text-3xl text-crema">
+              <p className="font-mono text-[28px] text-tinta tabular-nums">
                 {displayVisitas.toLocaleString('es-MX')}
               </p>
             </div>
             <button
               onClick={cargarVisitas}
               title="Actualizar"
-              className="ml-auto p-2 rounded-lg hover:bg-white/10 text-verde-pistache
-                         transition-colors duration-200 hover:rotate-180 transition-transform"
+              aria-label="Actualizar visitas"
+              className="ml-auto inline-flex h-11 w-11 items-center justify-center rounded hover:bg-papel-hondo text-tinta-suave transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -345,38 +342,38 @@ export default function Admin() {
         )}
 
         {/* ── Tabs ── */}
-        <div className="flex gap-3 mb-8 flex-wrap">
+        <div className="flex gap-1 mb-8 p-1 bg-papel-hondo border border-linea rounded overflow-x-auto">
           <button
             onClick={() => { setTab('catalogo'); setEditandoId(null); setForm(FORM_INICIAL); setPreview(null) }}
-            className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
+            className={`font-lato font-semibold text-[15px] px-4 min-h-[44px] whitespace-nowrap rounded-sm transition-colors duration-200
               ${tab === 'catalogo'
-                ? 'bg-cafe-oscuro text-crema shadow-lg scale-105'
-                : 'text-cafe-oscuro bg-white border border-crema-oscura hover:bg-crema-oscura'}`}
+                ? 'bg-papel-claro text-tinta border border-linea-fuerte shadow-hoja'
+                : 'text-tinta-suave border border-transparent hover:text-tinta'}`}
           >
             Catálogo
           </button>
           <button
             onClick={() => { setTab('form'); setEditandoId(null); setForm(FORM_INICIAL); setPreview(null); setFormError(null); setFormExito(null) }}
-            className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
+            className={`font-lato font-semibold text-[15px] px-4 min-h-[44px] whitespace-nowrap rounded-sm transition-colors duration-200
               flex items-center gap-2
               ${tab === 'form'
-                ? 'bg-cafe-oscuro text-crema shadow-lg scale-105'
-                : 'text-cafe-oscuro bg-white border border-crema-oscura hover:bg-crema-oscura'}`}
+                ? 'bg-papel-claro text-tinta border border-linea-fuerte shadow-hoja'
+                : 'text-tinta-suave border border-transparent hover:text-tinta'}`}
           >
-            <span className="text-lg leading-none">+</span> Agregar Ramo
+            <span className="text-lg leading-none">+</span> Agregar ramo
           </button>
           <button
             onClick={() => setTab('promociones')}
-            className={`font-lato font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300
+            className={`font-lato font-semibold text-[15px] px-4 min-h-[44px] whitespace-nowrap rounded-sm transition-colors duration-200
               flex items-center gap-2
               ${tab === 'promociones'
-                ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-white shadow-lg scale-105'
-                : 'text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100'}`}
+                ? 'bg-papel-claro text-tinta border border-linea-fuerte shadow-hoja'
+                : 'text-tinta-suave border border-transparent hover:text-tinta'}`}
           >
-            🏷️ Promociones
+            <Icon name="tag" size={16} /> Promociones
             {ramosEnPromocion.length > 0 && (
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold
-                ${tab === 'promociones' ? 'bg-white/30 text-white' : 'bg-amber-500 text-white'}`}>
+                bg-barro text-papel-claro font-mono`}>
                 {ramosEnPromocion.length}
               </span>
             )}
@@ -395,7 +392,7 @@ export default function Admin() {
               <Spinner size="lg" />
             ) : ramos.length === 0 ? (
               <div className="text-center py-20">
-                <span className="text-6xl block mb-4">🌸</span>
+                <Icon name="flower" size={48} strokeWidth={1.25} className="mx-auto mb-4 text-linea-fuerte" />
                 <p className="font-playfair text-cafe-oscuro text-lg">No hay ramos aún.</p>
                 <button onClick={() => setTab('form')}
                   className="mt-4 bg-verde-bosque text-white font-lato font-bold px-6 py-2 rounded-lg hover:bg-verde-marino transition-colors">
@@ -407,9 +404,9 @@ export default function Admin() {
                 {ramos.map((ramo, idx) => (
                   <div
                     key={ramo.id}
-                    className="bg-white rounded-xl shadow-[0_2px_12px_rgba(59,31,14,0.08)]
+                    className="bg-papel-claro border border-linea rounded 
                                flex items-center gap-4 p-4 transition-all duration-300
-                               hover:shadow-[0_6px_24px_rgba(59,31,14,0.14)]
+                               hover:border-linea-fuerte
                                hover:-translate-y-0.5 animate-slide-in-left"
                     style={{ animationDelay: `${idx * 0.05}s` }}
                   >
@@ -417,7 +414,7 @@ export default function Admin() {
                       {ramo.foto_url ? (
                         <img src={ramo.foto_url} alt={ramo.nombre} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl opacity-40">🌸</div>
+                        <div className="w-full h-full flex items-center justify-center text-linea-fuerte"><Icon name="flower" size={26} strokeWidth={1.25} /></div>
                       )}
                     </div>
 
@@ -425,9 +422,9 @@ export default function Admin() {
                       <div className="flex items-center gap-2 mb-0.5">
                         <p className="font-playfair font-semibold text-cafe-oscuro truncate">{ramo.nombre}</p>
                         {ramo.en_promocion && (
-                          <span className="text-xs bg-amber-100 text-amber-700 border border-amber-200
+                          <span className="text-xs bg-barro-claro text-barro-hondo border border-barro/30
                                            font-lato font-bold px-2 py-0.5 rounded-full flex-shrink-0">
-                            🏷️ Oferta
+                            Oferta
                           </span>
                         )}
                       </div>
@@ -441,7 +438,7 @@ export default function Admin() {
                               <span className="font-lato text-xs text-cafe-medio/60 line-through">
                                 ${Number(ramo.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                               </span>
-                              <span className="font-lato font-bold text-sm text-amber-600">
+                              <span className="font-lato font-bold text-sm text-barro">
                                 ${Number(ramo.precio_promocion).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                               </span>
                             </>
@@ -474,7 +471,7 @@ export default function Admin() {
                       <button
                         onClick={() => togglePromocion(ramo)}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
-                          ${ramo.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
+                          ${ramo.en_promocion ? 'bg-barro' : 'bg-gray-300'}`}
                       >
                         <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
                           ${ramo.en_promocion ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -492,7 +489,7 @@ export default function Admin() {
                       </button>
                       <button onClick={() => setConfirmEliminar(ramo)} title="Eliminar"
                         className="p-2 rounded-lg hover:bg-red-50 text-red-400 transition-colors hover:scale-110 transition-transform">
-                        🗑️
+                        <Icon name="trash" size={18} />
                       </button>
                     </div>
                   </div>
@@ -530,19 +527,19 @@ export default function Admin() {
                   return (
                     <div
                       key={ramo.id}
-                      className={`rounded-2xl p-5 transition-all duration-400 animate-slide-in-left
+                      className={`rounded p-5 transition-all duration-400 animate-slide-in-left
                         ${ramo.en_promocion
-                          ? 'bg-amber-50 border-2 border-amber-300 shadow-[0_4px_20px_rgba(251,191,36,0.18)]'
-                          : 'bg-white border-2 border-transparent shadow-[0_2px_12px_rgba(59,31,14,0.08)]'}`}
+                          ? 'bg-barro-claro/60 border-2 border-barro/40 '
+                          : 'bg-white border-2 border-transparent '}`}
                       style={{ animationDelay: `${idx * 0.06}s` }}
                     >
                       <div className="flex items-start gap-4">
                         {/* Foto */}
-                        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-crema-oscura">
+                        <div className="w-16 h-16 rounded overflow-hidden flex-shrink-0 bg-crema-oscura">
                           {ramo.foto_url ? (
                             <img src={ramo.foto_url} alt={ramo.nombre} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xl opacity-40">🌸</div>
+                            <div className="w-full h-full flex items-center justify-center text-linea-fuerte"><Icon name="flower" size={26} strokeWidth={1.25} /></div>
                           )}
                         </div>
 
@@ -552,7 +549,7 @@ export default function Admin() {
                             <p className="font-playfair font-semibold text-cafe-oscuro">{ramo.nombre}</p>
                             {promoExito === ramo.id && (
                               <span className="text-xs text-green-600 font-lato font-bold animate-bounce-in">
-                                ✓ Guardado
+                                <Icon name="check" size={14} className="inline -mt-0.5" /> Guardado
                               </span>
                             )}
                           </div>
@@ -568,12 +565,12 @@ export default function Admin() {
                             </div>
                             {tienePromo && (
                               <>
-                                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 text-barro flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                 </svg>
                                 <div>
-                                  <span className="font-lato text-xs text-amber-600 uppercase tracking-wide">Precio oferta</span>
-                                  <p className="font-playfair font-bold text-lg text-amber-600">
+                                  <span className="font-lato text-xs text-barro uppercase tracking-wide">Precio oferta</span>
+                                  <p className="font-playfair font-bold text-lg text-barro">
                                     ${Number(ramo.precio_promocion).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                                   </p>
                                 </div>
@@ -614,7 +611,7 @@ export default function Admin() {
                                                focus:outline-none transition-colors
                                                ${promoError[ramo.id]
                                                  ? 'border-red-400 focus:border-red-500'
-                                                 : 'border-amber-200 focus:border-amber-400'}`}
+                                                 : 'border-barro/30 focus:border-barro'}`}
                                   />
                                   <button
                                     onClick={() => savePromoPrice(ramo)}
@@ -624,7 +621,7 @@ export default function Admin() {
                                       editVal === '' ||
                                       !!promoError[ramo.id]
                                     }
-                                    className="bg-amber-500 hover:bg-amber-600 text-white font-lato font-bold
+                                    className="bg-barro-claro/600 hover:bg-barro-hondo text-white font-lato font-bold
                                                text-sm px-3 py-1.5 rounded-lg transition-colors duration-200
                                                disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
@@ -636,7 +633,7 @@ export default function Admin() {
                               {/* Error en tiempo real */}
                               {promoError[ramo.id] && (
                                 <p className="font-lato text-xs text-red-600 font-semibold flex items-center gap-1 animate-bounce-in">
-                                  ✕ {promoError[ramo.id]}
+                                  <Icon name="alert" size={14} /> {promoError[ramo.id]}
                                 </p>
                               )}
 
@@ -645,7 +642,7 @@ export default function Admin() {
                                Number(ramo.precio) > 0 && parseFloat(editVal) > 0 &&
                                parseFloat(editVal) < Number(ramo.precio) && (
                                 <p className="font-lato text-xs text-green-600 font-semibold">
-                                  ✓ El cliente ahorra ${(Number(ramo.precio) - parseFloat(editVal)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                  <Icon name="check" size={14} className="inline -mt-0.5" /> El cliente ahorra ${(Number(ramo.precio) - parseFloat(editVal)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                                 </p>
                               )}
                             </div>
@@ -657,15 +654,15 @@ export default function Admin() {
                           <button
                             onClick={() => togglePromocion(ramo)}
                             className={`relative inline-flex h-7 items-center rounded-full transition-colors duration-300
-                              ${ramo.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
+                              ${ramo.en_promocion ? 'bg-barro' : 'bg-gray-300'}`}
                             style={{ width: '52px' }}
                           >
                             <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transform transition-transform duration-300
                               ${ramo.en_promocion ? 'translate-x-7' : 'translate-x-1'}`} />
                           </button>
                           <span className={`text-xs font-lato font-bold
-                            ${ramo.en_promocion ? 'text-amber-600' : 'text-cafe-medio'}`}>
-                            {ramo.en_promocion ? '🏷️ Activa' : 'Inactiva'}
+                            ${ramo.en_promocion ? 'text-barro' : 'text-cafe-medio'}`}>
+                            {ramo.en_promocion ? 'Activa' : 'Inactiva'}
                           </span>
                         </div>
                       </div>
@@ -676,8 +673,8 @@ export default function Admin() {
             )}
 
             {!loadingRamos && ramosEnPromocion.length === 0 && ramos.length > 0 && (
-              <div className="mt-8 text-center py-10 bg-amber-50 rounded-2xl border-2 border-dashed border-amber-200">
-                <span className="text-5xl block mb-3">🏷️</span>
+              <div className="mt-8 text-center py-10 bg-barro-claro/60 rounded border-2 border-dashed border-barro/30">
+                <Icon name="tag" size={40} strokeWidth={1.25} className="mx-auto mb-3 text-barro" />
                 <p className="font-playfair text-cafe-oscuro font-semibold mb-1">Sin ofertas activas</p>
                 <p className="font-lato font-light text-sm text-cafe-medio">
                   Activa el toggle en cualquier ramo para marcarlo como oferta especial.
@@ -757,33 +754,33 @@ export default function Admin() {
                   />
                 </div>
                 {parseFloat(form.precio) >= 1500 && (
-                  <p className="mt-1.5 text-xs font-lato text-amber-600 flex items-center gap-1">
-                    🏷️ Precio ≥ $1,500 — oferta activada automáticamente
+                  <p className="mt-1.5 text-xs font-lato text-barro flex items-center gap-1">
+                    Precio ≥ $1,500 — oferta activada automáticamente
                   </p>
                 )}
               </div>
 
               {/* Precio de promoción (visible solo si en_promocion) */}
               {form.en_promocion && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 animate-price-drop">
-                  <label className="block font-lato font-bold text-sm text-amber-800 mb-1">
-                    🏷️ Precio de oferta (MXN)
+                <div className="bg-barro-claro/60 border border-barro/30 rounded p-4 animate-price-drop">
+                  <label className="block font-lato font-bold text-sm text-barro-hondo mb-1">
+                    Precio de oferta (MXN)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-lato text-amber-600 font-bold">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-lato text-barro font-bold">$</span>
                     <input
                       type="number" min="0" step="0.01"
                       value={form.precio_promocion}
                       onChange={(e) => setForm({ ...form, precio_promocion: e.target.value })}
                       placeholder="Ej: 1300.00"
-                      className="w-full pl-8 pr-4 py-2.5 border border-amber-300 rounded-lg
+                      className="w-full pl-8 pr-4 py-2.5 border border-barro/40 rounded-lg
                                  font-lato text-cafe-oscuro bg-white
-                                 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-shadow"
+                                 focus:outline-none focus:ring-2 focus:ring-barro/40 transition-shadow"
                     />
                   </div>
                   {ahorroForm !== null && (
                     <p className="mt-2 text-xs font-lato text-green-700 font-semibold">
-                      ✓ El cliente ahorra ${ahorroForm.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                      <Icon name="check" size={14} className="inline -mt-0.5" /> El cliente ahorra ${ahorroForm.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                       ({Math.round((ahorroForm / precioOriginal) * 100)}% de descuento)
                     </p>
                   )}
@@ -796,7 +793,7 @@ export default function Admin() {
                   Foto del ramo {!editandoId && '*'}
                 </label>
                 {preview && (
-                  <div className="mb-3 rounded-xl overflow-hidden aspect-[4/3] max-w-xs shadow-md">
+                  <div className="mb-3 rounded overflow-hidden aspect-[4/3] max-w-xs shadow-md">
                     <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 )}
@@ -830,19 +827,19 @@ export default function Admin() {
               </div>
 
               {/* Toggle en_promocion */}
-              <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300
-                ${form.en_promocion ? 'bg-amber-50 border-amber-200' : 'bg-white border-crema-oscura'}`}>
+              <div className={`flex items-center gap-3 p-3 rounded border transition-all duration-300
+                ${form.en_promocion ? 'bg-barro-claro/60 border-barro/30' : 'bg-white border-crema-oscura'}`}>
                 <button
                   type="button"
                   onClick={() => setForm({ ...form, en_promocion: !form.en_promocion })}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
-                    ${form.en_promocion ? 'bg-amber-400' : 'bg-gray-300'}`}
+                    ${form.en_promocion ? 'bg-barro' : 'bg-gray-300'}`}
                 >
                   <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200
                     ${form.en_promocion ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
                 <span className="font-lato text-sm text-cafe-oscuro">
-                  {form.en_promocion ? '🏷️ Activar como oferta especial' : 'Sin oferta'}
+                  {form.en_promocion ? 'Activar como oferta especial' : 'Sin oferta'}
                 </span>
               </div>
 
@@ -853,7 +850,7 @@ export default function Admin() {
                   disabled={guardando}
                   className="flex-1 bg-verde-bosque hover:bg-verde-marino text-white font-lato font-bold
                              py-3 rounded-lg transition-all duration-200 disabled:opacity-60
-                             hover:shadow-lg hover:-translate-y-0.5"
+                             "
                 >
                   {guardando ? 'Guardando...' : 'Guardar Ramo'}
                 </button>
@@ -873,9 +870,9 @@ export default function Admin() {
 
       {/* Modal confirmar eliminar */}
       {confirmEliminar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cafe-oscuro/70 backdrop-blur-sm">
-          <div className="bg-crema rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-scale-in">
-            <span className="text-4xl block mb-3">🗑️</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tinta/60">
+          <div className="bg-crema rounded  max-w-sm w-full p-6 text-center animate-scale-in">
+            <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-700"><Icon name="trash" size={22} /></span>
             <h3 className="font-playfair text-xl font-bold text-cafe-oscuro mb-2">¿Eliminar ramo?</h3>
             <p className="font-lato font-light text-cafe-medio text-sm mb-6">
               ¿Eliminar el ramo <strong>"{confirmEliminar.nombre}"</strong>?
@@ -885,7 +882,7 @@ export default function Admin() {
               <button
                 onClick={confirmarEliminar}
                 disabled={eliminandoId === confirmEliminar.id}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white font-lato font-bold
+                className="flex-1 bg-red-700 hover:bg-red-800 text-white font-lato font-bold
                            py-2.5 rounded-lg transition-colors duration-200 disabled:opacity-60"
               >
                 {eliminandoId === confirmEliminar.id ? 'Eliminando...' : 'Sí, eliminar'}
