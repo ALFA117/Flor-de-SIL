@@ -3,164 +3,114 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    font-family: 'Lato', sans-serif;
-    background-color: #F5ECD7;
-    color: #3B1F0E;
+  :root {
+    --papel: #F6F2EA;
+    --tinta: #1F2A24;
+    --barro: #9A4F36;
+    color-scheme: light;
   }
 
-  * {
+  html {
+    -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
   }
+
+  body {
+    @apply bg-papel text-tinta font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: #E9D3C7;
+    color: #1F2A24;
+  }
+
+  :focus-visible {
+    outline: 2px solid #9A4F36;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
 }
 
-/* ── Animaciones ── */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@layer components {
+  .contenedor {
+    @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10;
+  }
+
+  .eyebrow {
+    @apply font-sans text-[13px] font-semibold tracking-[0.14em] uppercase text-barro;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded
+           font-sans text-[15px] font-semibold transition-colors duration-200
+           disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  .btn-primario {
+    @apply btn bg-bosque text-papel-claro border border-bosque hover:bg-bosque-hondo hover:border-bosque-hondo;
+  }
+  .btn-secundario {
+    @apply btn bg-transparent text-tinta border border-tinta/80 hover:bg-tinta hover:text-papel;
+  }
+  .btn-claro {
+    @apply btn bg-papel text-tinta border border-papel hover:bg-white;
+  }
+
+  .regla {
+    @apply h-px w-full bg-linea;
+  }
+
+  .precio {
+    @apply font-mono tabular-nums tracking-tight;
+  }
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(32px); }
+/* ── Movimiento: discreto y de una sola vez ── */
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-24px); }
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes floatLogo {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-10px); }
-}
-
 @keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
 
-@keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
-}
-
-@keyframes slideUpCard {
-  from { opacity: 0; transform: translateY(40px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    }
-}
-
-@keyframes promoGlow {
-  0%, 100% { box-shadow: 0 0 8px rgba(196,149,106,0.5); }
-  50%       { box-shadow: 0 0 20px rgba(196,149,106,0.9), 0 0 40px rgba(196,149,106,0.3); }
-}
-
-@keyframes countUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes ribbonSlide {
-  from { transform: translateX(-100%) rotate(-45deg); }
-  to   { transform: translateX(0)    rotate(-45deg); }
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-28px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes bounceIn {
-  0%   { opacity: 0; transform: scale(0.75); }
-  60%  { opacity: 1; transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-
-@keyframes shine {
-  from { left: -80%; }
-  to   { left: 140%; }
-}
-
-@keyframes priceDrop {
-  0%   { opacity: 0; transform: translateY(-8px) scale(0.9); }
-  100% { opacity: 1; transform: translateY(0)    scale(1);   }
-}
-
-/* ── Clases utilitarias de animación ── */
 @layer utilities {
-  .animate-fade-in        { animation: fadeIn     0.7s ease both; }
-  .animate-fade-in-up     { animation: fadeInUp   0.8s ease both; }
-  .animate-fade-in-down   { animation: fadeInDown 0.6s ease both; }
-  .animate-scale-in       { animation: scaleIn    0.7s cubic-bezier(.22,1,.36,1) both; }
-  .animate-float          { animation: floatLogo  4s  ease-in-out infinite; }
-  .animate-pulse-soft     { animation: pulse-soft 2.5s ease-in-out infinite; }
-  .animate-slide-up-card  { animation: slideUpCard 0.6s cubic-bezier(.22,1,.36,1) both; }
-  .animate-count-up       { animation: countUp    0.5s ease both; }
+  .animate-fade-in       { animation: fadeIn 0.3s ease-out both; }
+  .animate-rise          { animation: riseIn 0.6s cubic-bezier(.2,.7,.2,1) both; }
+  .animate-sheet         { animation: sheetIn 0.32s cubic-bezier(.2,.7,.2,1) both; }
 
-  .delay-100  { animation-delay: 0.1s; }
-  .delay-200  { animation-delay: 0.2s; }
-  .delay-300  { animation-delay: 0.3s; }
-  .delay-400  { animation-delay: 0.4s; }
-  .delay-500  { animation-delay: 0.5s; }
-  .delay-600  { animation-delay: 0.6s; }
-  .delay-700  { animation-delay: 0.7s; }
-  .delay-800  { animation-delay: 0.8s; }
-  .delay-900  { animation-delay: 0.9s; }
-  .delay-1000 { animation-delay: 1.0s; }
+  /* Alias que usa el panel de administración */
+  .animate-fade-in-up    { animation: riseIn 0.5s cubic-bezier(.2,.7,.2,1) both; }
+  .animate-fade-in-down  { animation: fadeIn 0.25s ease-out both; }
+  .animate-scale-in      { animation: sheetIn 0.3s cubic-bezier(.2,.7,.2,1) both; }
+  .animate-slide-in-left { animation: riseIn 0.4s cubic-bezier(.2,.7,.2,1) both; }
+  .animate-bounce-in     { animation: fadeIn 0.25s ease-out both; }
+  .animate-price-drop    { animation: fadeIn 0.25s ease-out both; }
 
-  /* Shimmer dorado para separadores */
-  .shimmer-gold {
-    background: linear-gradient(90deg, #C4956A 0%, #f0d080 50%, #C4956A 100%);
-    background-size: 200% auto;
-    animation: shimmer 3s linear infinite;
+  .skeleton {
+    background: linear-gradient(90deg, #ECE6DA 0px, #F4EFE6 120px, #ECE6DA 240px);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s linear infinite;
   }
+}
 
-  /* Glassmorphism suave */
-  .glass {
-    background: rgba(245, 236, 215, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(245, 236, 215, 0.25);
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-
-  /* Badge de promoción con brillo pulsante */
-  .promo-glow {
-    animation: promoGlow 2s ease-in-out infinite;
-  }
-
-  .animate-slide-in-left { animation: slideInLeft 0.5s cubic-bezier(.22,1,.36,1) both; }
-  .animate-bounce-in     { animation: bounceIn    0.5s cubic-bezier(.22,1,.36,1) both; }
-  .animate-price-drop    { animation: priceDrop   0.4s cubic-bezier(.22,1,.36,1) both; }
 }
-
-/* Efecto shine en hover para tarjetas */
-.card-shine {
-  position: relative;
-  overflow: hidden;
-}
-.card-shine::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -80%;
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
-  transform: skewX(-18deg);
-  z-index: 10;
-  pointer-events: none;
-}
-.card-shine:hover::before {
-  animation: shine 0.75s ease forwards;
-}
-
