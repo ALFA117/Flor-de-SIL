@@ -25,8 +25,8 @@
 
   | Variable              | Valor                                          |
   |-----------------------|------------------------------------------------|
-  | `VITE_SUPABASE_URL`   | `https://hbsioiejbkvkdwasyrck.supabase.co`     |
-  | `VITE_SUPABASE_ANON_KEY` | `sb_publishable_XRxlhx6clAOO_f2R5rurJg_8EC_Zd9c` |
+  | `VITE_SUPABASE_URL`   | `https://tu-proyecto.supabase.co`     |
+  | `VITE_SUPABASE_ANON_KEY` | *(tu publishable key de Supabase — Settings → API)* |
   | `VITE_API_URL`        | *(dejar vacío por ahora, se llena en Paso 4)*  |
 
 - [ ] Hacer **Deploy**
@@ -46,10 +46,10 @@
   | Variable                   | Valor                                              |
   |----------------------------|----------------------------------------------------|
   | `PORT`                     | `4000`                                             |
-  | `JWT_SECRET`               | `flordesil_secret_2024`                            |
-  | `ADMIN_USER`               | `claudio123`                                       |
-  | `ADMIN_PASSWORD`           | `floreria321`                                      |
-  | `SUPABASE_URL`             | `https://hbsioiejbkvkdwasyrck.supabase.co`         |
+  | `JWT_SECRET`               | *(genera uno largo y aleatorio, p. ej. `openssl rand -base64 48`)* |
+  | `ADMIN_USER`               | *(el usuario de admin que elijas)* |
+  | `ADMIN_PASSWORD`           | *(una contraseña fuerte y única)* |
+  | `SUPABASE_URL`             | `https://tu-proyecto.supabase.co`         |
   | `SUPABASE_SERVICE_ROLE_KEY`| *(tu secret key de Supabase — Settings → API → Secret key)* |
   | `CLIENT_URL`               | *(URL de Vercel del Paso 2, ej: https://flor-de-sil.vercel.app)* |
 
@@ -78,7 +78,7 @@ Una vez que tienes ambas URLs (Vercel y Railway):
 
 - [ ] Abrir la URL de Vercel → ver que carga el catálogo
 - [ ] Si no hay ramos: es normal, la tabla está vacía todavía
-- [ ] Ir a `/admin/login` → entrar con `claudio123` / `floreria321`
+- [ ] Ir a `/admin/login` → entrar con tu `ADMIN_USER` / `ADMIN_PASSWORD`
 - [ ] Agregar un ramo de prueba con foto
 - [ ] Verificar que aparece en el catálogo público
 - [ ] Verificar que el botón "Pedir por WhatsApp" abre WhatsApp con el mensaje correcto
@@ -94,4 +94,4 @@ Una vez que tienes ambas URLs (Vercel y Railway):
 | Catálogo   | `https://______.vercel.app` |
 | Admin      | `https://______.vercel.app/admin` |
 | API        | `https://______.railway.app` |
-| Supabase   | `https://hbsioiejbkvkdwasyrck.supabase.co` |
+| Supabase   | `https://tu-proyecto.supabase.co` |
